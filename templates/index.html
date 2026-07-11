@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holehe Web UI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    /* ── Header ── */
+    header { margin-bottom: 28px; }
+    header h1 { font-size: 1.6rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.02em; }
+    header p  { margin-top: 6px; color: #94a3b8; font-size: 0.95rem; }
+
+    /* ── Layout ── */
+    .layout { display: flex; gap: 24px; align-items: flex-start; }
+    .main-col { flex: 1; min-width: 0; }
+
+    /* ── Card ── */
+    .card {
+      background: #1e2330;
+      border: 1px solid #2d3348;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Search input row ── */
+    .search-row { display: flex; gap: 10px; align-items: center; }
+
+    input[type="email"] {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      background: #0f1117;
+      border: 1px solid #2d3348;
+      border-radius: 6px;
+      color: #e2e8f0;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="email"]::placeholder { color: #4b5563; }
+    input[type="email"]:focus { border-color: #4f80ff; }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: #4f80ff; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #3b6ef0; }
+    .btn-outline { background: transparent; border: 1px solid #2d3348; color: #94a3b8; }
+    .btn-outline:hover:not(:disabled) { border-color: #4f80ff; color: #4f80ff; }
+    .btn-danger  { background: transparent; border: none; color: #f87171; padding: 2px 6px; font-size: 0.85rem; }
+    .btn-danger:hover { color: #ef4444; }
+
+    /* ── Checkbox ── */
+    .checkbox-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 12px; color: #94a3b8; font-size: 0.88rem;
+    }
+    input[type="checkbox"] { accent-color: #4f80ff; width: 14px; height: 14px; }
+
+    /* ── Error / Meta ── */
+    .error-msg {
+      background: #2d1515; border: 1px solid #7f1d1d; color: #fca5a5;
+      border-radius: 6px; padding: 10px 14px; font-size: 0.9rem; margin-top: 16px;
+    }
+    .meta { color: #64748b; font-size: 0.82rem; margin: 12px 0 4px; }
+    .meta strong { color: #94a3b8; }
+
+    /* ── Action bar ── */
+    .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+    /* ── Results table ── */
+    .results-card {
+      background: #1e2330; border: 1px solid #2d3348;
+      border-radius: 10px; overflow: hidden; margin-top: 20px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead tr { background: #161b27; }
+    th { padding: 10px 14px; text-align: left; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    td { padding: 8px 14px; border-top: 1px solid #232838; color: #cbd5e1; }
+    tr:hover td { background: #232838; }
+
+    .tag-found    { color: #4ade80; }
+    .tag-notfound { color: #475569; }
+    .tag-error    { color: #fb923c; }
+
+    .empty-results { padding: 32px; text-align: center; color: #475569; font-size: 0.9rem; }
+
+    /* ── Saved sidebar ── */
+    .saved-col { width: 220px; flex-shrink: 0; }
+    .saved-card {
+      background: #1e2330; border: 1px solid #2d3348;
+      border-radius: 10px; padding: 16px; position: sticky; top: 20px;
+    }
+    .saved-card h2 {
+      font-size: 0.85rem; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;
+    }
+    .saved-list { list-style: none; }
+    .saved-list li {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid #232838;
+    }
+    .saved-list li:last-child { border-bottom: none; }
+    .saved-email-btn {
+      background: none; border: none; color: #7aa2f7; cursor: pointer;
+      font-size: 0.85rem; text-align: left; padding: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 155px;
+    }
+    .saved-email-btn:hover { color: #4f80ff; text-decoration: underline; }
+    .empty-note { color: #475569; font-size: 0.82rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Holehe Web UI</h1>
+      <p>Check which platforms an email address is registered on.</p>
+    </header>
+
+    <div class="layout">
+      <div class="main-col">
+
+        <!-- Search form -->
+        <div class="card">
+          <form method="POST" action="/">
+            <div class="search-row">
+              <input type="email" name="email" placeholder="name@example.com"
+                     value="{{ email }}" required autocomplete="off">
+              <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+            <label class="checkbox-row">
+              <input type="checkbox" name="only_used" {% if only_used %}checked{% endif %}>
+              Only show confirmed accounts
+            </label>
+          </form>
+        </div>
+
+        {% if error %}
+          <div class="error-msg">{{ error }}</div>
+        {% endif %}
+
+        {% if rows is not none %}
+          {% set found    = rows | selectattr('status', 'equalto', '+') | list %}
+          {% set notfound = rows | selectattr('status', 'equalto', '-') | list %}
+          {% set errored  = rows | rejectattr('status', 'equalto', '+') | rejectattr('status', 'equalto', '-') | list %}
+
+          <p class="meta">{{ rows | length }} result(s) for <strong>{{ email }}</strong></p>
+
+          <div class="action-bar">
+            <form method="POST" action="/save-email" style="display:contents;">
+              <input type="hidden" name="email" value="{{ email }}" >
+              <button type="submit" class="btn btn-outline">Save email</button>
+            </form>
+            <form method="POST" action="/download/json" style="display:contents;">
+              <input type="hidden" name="email" value="{{ email }}">
+              <input type="hidden" name="data" value='{{ rows_json }}'>
+              <button type="submit" class="btn btn-outline">Download JSON</button>
+            </form>
+            <form method="POST" action="/download/txt" style="display:contents;">
+              <input type="hidden" name="email" value="{{ email }}">
+              <input type="hidden" name="data" value='{{ rows_json }}'>
+              <button type="submit" class="btn btn-outline">Download TXT</button>
+            </form>
+          </div>
+
+          {% if rows %}
+            <div class="results-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="tag-found">Found ({{ found | length }})</th>
+                    <th class="tag-notfound">Not Found ({{ notfound | length }})</th>
+                    <th class="tag-error">Rate Limited / Error ({{ errored | length }})</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% set max_rows = [found|length, notfound|length, errored|length] | max %}
+                  {% for i in range(max_rows) %}
+                  <tr>
+                    <td class="tag-found">{{ found[i].site    if i < found|length    else '' }}</td>
+                    <td class="tag-notfound">{{ notfound[i].site if i < notfound|length else '' }}</td>
+                    <td class="tag-error">{{ errored[i].site  if i < errored|length  else '' }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="results-card">
+              <p class="empty-results">No accounts found for {{ email }}.</p>
+            </div>
+          {% endif %}
+        {% endif %}
+
+      </div><!-- /main-col -->
+
+      <!-- Saved emails sidebar -->
+      <div class="saved-col">
+        <div class="saved-card">
+          <h2>Saved Emails</h2>
+          {% if saved_emails %}
+            <ul class="saved-list">
+              {% for saved in saved_emails %}
+              <li>
+                <form method="POST" action="/" style="flex:1; min-width:0;">
+                  <input type="hidden" name="email" value="{{ saved }}">
+                  {% if only_used %}<input type="hidden" name="only_used" value="on">{% endif %}
+                  <button type="submit" class="saved-email-btn" title="{{ saved }}">{{ saved }}</button>
+                </form>
+                <form method="POST" action="/delete-email">
+                  <input type="hidden" name="email" value="{{ saved }}">
+                  <button type="submit" class="btn btn-danger" title="Remove">&times;</button>
+                </form>
+              </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="empty-note">No saved emails yet. Run a search, then click "Save email".</p>
+          {% endif %}
+        </div>
+      </div>
+
+    </div><!-- /layout -->
+  </div><!-- /container -->
+</body>
+</html>
