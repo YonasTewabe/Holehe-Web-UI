@@ -1,6 +1,8 @@
 import json
 import re
 import subprocess
+import tempfile
+import os
 from datetime import datetime, timezone
 
 from email_validator import EmailNotValidError, validate_email
@@ -34,12 +36,14 @@ def run_holehe(email: str, only_used: bool = True):
         cmd.append("--only-used")
 
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=120,
+                cwd=tmpdir,  # holehe writes its CSV here; tmpdir is auto-deleted
+            )
     except subprocess.TimeoutExpired:
         return [], "Lookup timed out. Try again."
 
@@ -107,6 +111,7 @@ def index():
 @app.route("/download/<fmt>", methods=["POST"])
 def download(fmt):
     email = request.form.get("email", "unknown").strip()
+    scope = request.form.get("scope", "full")
     try:
         rows = json.loads(request.form.get("data", "[]"))
     except json.JSONDecodeError:
@@ -121,29 +126,41 @@ def download(fmt):
     filename = f"holehe_report_{safe_email}_{timestamp}.{fmt}"
 
     if fmt == "json":
-        payload = {
-            "email": email,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "found": found,
-            "not_found": notfound,
-            "rate_limited_or_error": errored,
-        }
+        if scope == "found":
+            payload = {
+                "email": email,
+                "found": found,
+            }
+        else:
+            payload = {
+                "email": email,
+                "found": found,
+                "not_found": notfound,
+                "rate_limited_or_error": errored,
+            }
         content = json.dumps(payload, indent=2)
         mimetype = "application/json"
     else:  # txt
-        lines = [
-            f"Holehe report for: {email}",
-            f"Generated at: {datetime.now(timezone.utc).isoformat()}",
-            "",
-            f"Found ({len(found)}):",
-            *([f"  - {s}" for s in found] or ["  (none)"]),
-            "",
-            f"Not Found ({len(notfound)}):",
-            *([f"  - {s}" for s in notfound] or ["  (none)"]),
-            "",
-            f"Rate Limited / Error ({len(errored)}):",
-            *([f"  - {s}" for s in errored] or ["  (none)"]),
-        ]
+        if scope == "found":
+            lines = [
+                f"Holehe report for: {email}",
+                "",
+                f"Found ({len(found)}):",
+                *([f"  - {s}" for s in found] or ["  (none)"]),
+            ]
+        else:
+            lines = [
+                f"Holehe report for: {email}",
+                "",
+                f"Found ({len(found)}):",
+                *([f"  - {s}" for s in found] or ["  (none)"]),
+                "",
+                f"Not Found ({len(notfound)}):",
+                *([f"  - {s}" for s in notfound] or ["  (none)"]),
+                "",
+                f"Rate Limited / Error ({len(errored)}):",
+                *([f"  - {s}" for s in errored] or ["  (none)"]),
+            ]
         content = "\n".join(lines)
         mimetype = "text/plain"
 

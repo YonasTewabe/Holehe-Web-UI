@@ -106,6 +106,48 @@
 
     .empty-results { padding: 32px; text-align: center; color: #475569; font-size: 0.9rem; }
 
+    /* ── Download modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #1e2330;
+      border: 1px solid #2d3348;
+      border-radius: 12px;
+      padding: 28px 24px;
+      width: 100%; max-width: 380px;
+      position: relative;
+    }
+    .modal h3 { font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 20px; }
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none; color: #64748b;
+      font-size: 1.2rem; cursor: pointer; line-height: 1;
+    }
+    .modal-close:hover { color: #e2e8f0; }
+    .modal-group { margin-bottom: 18px; }
+    .modal-group label.group-label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: #64748b; margin-bottom: 8px;
+    }
+    .radio-row { display: flex; gap: 8px; }
+    .radio-btn {
+      flex: 1; padding: 8px 12px; font-size: 0.88rem; font-weight: 500;
+      border-radius: 6px; border: 1px solid #2d3348;
+      background: transparent; color: #94a3b8;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s;
+      text-align: center;
+    }
+    .radio-btn:hover { border-color: #4f80ff; color: #4f80ff; }
+    .radio-btn.selected { background: #4f80ff22; border-color: #4f80ff; color: #7aa2f7; }
+    .modal-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px; }
+
     .empty-note { color: #475569; font-size: 0.82rem; line-height: 1.5; }
   </style>
 </head>
@@ -121,7 +163,7 @@
         <div class="card">
           <form method="POST" action="/">
             <div class="search-row">
-              <input type="email" name="email" placeholder="name@example.com"
+              <input type="email" name="email" placeholder="email@example.com"
                      value="{{ email }}" required autocomplete="off">
               <button type="submit" class="btn btn-primary">Search</button>
             </div>
@@ -141,19 +183,10 @@
           {% set notfound = rows | selectattr('status', 'equalto', '-') | list %}
           {% set errored  = rows | rejectattr('status', 'equalto', '+') | rejectattr('status', 'equalto', '-') | list %}
 
-          <p class="meta">{{ rows | length }} result(s) for <strong>{{ email }}</strong></p>
+          <p class="meta">{{ rows | length }} results for <strong>{{ email }}</strong> &mdash; <strong>{{ found | length }}</strong> accounts found</p>
 
           <div class="action-bar">
-            <form method="POST" action="/download/json" style="display:contents;">
-              <input type="hidden" name="email" value="{{ email }}">
-              <input type="hidden" name="data" value='{{ rows_json }}'>
-              <button type="submit" class="btn btn-outline">Download JSON</button>
-            </form>
-            <form method="POST" action="/download/txt" style="display:contents;">
-              <input type="hidden" name="email" value="{{ email }}">
-              <input type="hidden" name="data" value='{{ rows_json }}'>
-              <button type="submit" class="btn btn-outline">Download TXT</button>
-            </form>
+            <button type="button" class="btn btn-outline" onclick="openDownloadModal()">Download Report</button>
           </div>
 
           {% if rows %}
@@ -162,19 +195,29 @@
                 <thead>
                   <tr>
                     <th class="tag-found">Found ({{ found | length }})</th>
+                    {% if not only_used %}
                     <th class="tag-notfound">Not Found ({{ notfound | length }})</th>
                     <th class="tag-error">Rate Limited / Error ({{ errored | length }})</th>
+                    {% endif %}
                   </tr>
                 </thead>
                 <tbody>
-                  {% set max_rows = [found|length, notfound|length, errored|length] | max %}
-                  {% for i in range(max_rows) %}
-                  <tr>
-                    <td class="tag-found">{{ found[i].site    if i < found|length    else '' }}</td>
-                    <td class="tag-notfound">{{ notfound[i].site if i < notfound|length else '' }}</td>
-                    <td class="tag-error">{{ errored[i].site  if i < errored|length  else '' }}</td>
-                  </tr>
-                  {% endfor %}
+                  {% if only_used %}
+                    {% for item in found %}
+                    <tr>
+                      <td class="tag-found">{{ item.site }}</td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                    {% set max_rows = [found|length, notfound|length, errored|length] | max %}
+                    {% for i in range(max_rows) %}
+                    <tr>
+                      <td class="tag-found">{{ found[i].site    if i < found|length    else '' }}</td>
+                      <td class="tag-notfound">{{ notfound[i].site if i < notfound|length else '' }}</td>
+                      <td class="tag-error">{{ errored[i].site  if i < errored|length  else '' }}</td>
+                    </tr>
+                    {% endfor %}
+                  {% endif %}
                 </tbody>
               </table>
             </div>
@@ -189,5 +232,82 @@
 
     </div><!-- /layout -->
   </div><!-- /container -->
+
+  <!-- Download modal -->
+  <div class="modal-backdrop" id="downloadModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <button class="modal-close" onclick="closeDownloadModal()" aria-label="Close">&times;</button>
+      <h3 id="modalTitle">Download Report</h3>
+
+      <div class="modal-group">
+        <label class="group-label">Content</label>
+        <div class="radio-row">
+          <button type="button" class="radio-btn selected" id="scopeFull" onclick="selectScope('full')">Full report</button>
+          <button type="button" class="radio-btn" id="scopeFound" onclick="selectScope('found')">Found only</button>
+        </div>
+      </div>
+
+      <div class="modal-group">
+        <label class="group-label">Format</label>
+        <div class="radio-row">
+          <button type="button" class="radio-btn selected" id="fmtJson" onclick="selectFmt('json')">JSON</button>
+          <button type="button" class="radio-btn" id="fmtTxt" onclick="selectFmt('txt')">TXT</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeDownloadModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitDownload()">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden form used to POST the download -->
+  <form id="downloadForm" method="POST" style="display:none;">
+    <input type="hidden" name="email" value="{{ email }}">
+    <input type="hidden" name="data"  value='{{ rows_json }}'>
+    <input type="hidden" name="scope" id="downloadScope" value="full">
+  </form>
+
+  <script>
+    let _scope = 'full';
+    let _fmt   = 'json';
+
+    function openDownloadModal() {
+      document.getElementById('downloadModal').classList.add('open');
+    }
+    function closeDownloadModal() {
+      document.getElementById('downloadModal').classList.remove('open');
+    }
+
+    function selectScope(val) {
+      _scope = val;
+      document.getElementById('scopeFull').classList.toggle('selected', val === 'full');
+      document.getElementById('scopeFound').classList.toggle('selected', val === 'found');
+    }
+    function selectFmt(val) {
+      _fmt = val;
+      document.getElementById('fmtJson').classList.toggle('selected', val === 'json');
+      document.getElementById('fmtTxt').classList.toggle('selected', val === 'txt');
+    }
+
+    function submitDownload() {
+      const form = document.getElementById('downloadForm');
+      document.getElementById('downloadScope').value = _scope;
+      form.action = '/download/' + _fmt;
+      form.submit();
+      closeDownloadModal();
+    }
+
+    // Close on backdrop click
+    document.getElementById('downloadModal').addEventListener('click', function(e) {
+      if (e.target === this) closeDownloadModal();
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeDownloadModal();
+    });
+  </script>
 </body>
 </html>
