@@ -16,9 +16,14 @@ from user_scanner.core.helpers import (
     get_site_name,
     find_category,
     is_loud,
-    is_valid_email,
 )
 from user_scanner.core.result import Result, Status
+
+try:
+    from user_scanner.core.helpers import is_valid_email
+except ImportError:
+    def is_valid_email(email: str) -> bool:  # type: ignore[misc]
+        return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
 
 app = Flask(__name__)
 

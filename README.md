@@ -1,6 +1,6 @@
 # OSINT Suite
 
-A browser-based frontend combining [Holehe](https://github.com/megadose/holehe) and [User Scanner](https://github.com/WildSiphon/user-scanner) — check which platforms an email address or username is registered on.
+A browser-based frontend combining [Holehe](https://github.com/megadose/holehe) and [User Scanner](https://github.com/kaifcodec/user-scanner) — check which platforms an email address or username is registered on.
 
 ## Features
 
