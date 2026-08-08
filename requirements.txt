@@ -1,3 +1,4 @@
 flask==3.0.3
 holehe
 email-validator==2.2.0
+user-scanner

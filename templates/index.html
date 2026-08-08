@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Holehe Web UI</title>
+  <title>OSINT Suite</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -15,68 +15,85 @@
       padding: 40px 16px;
     }
 
-    .container { max-width: 960px; margin: 0 auto; }
+    .container { max-width: 980px; margin: 0 auto; }
 
     /* ── Header ── */
     header { margin-bottom: 28px; }
     header h1 { font-size: 1.6rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.02em; }
     header p  { margin-top: 6px; color: #94a3b8; font-size: 0.95rem; }
 
-    /* ── Layout ── */
-    .layout { display: flex; gap: 24px; align-items: flex-start; }
-    .main-col { flex: 1; min-width: 0; }
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid #2d3348; }
+    .tab-btn {
+      padding: 10px 22px; font-size: 0.9rem; font-weight: 600;
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: #64748b; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: #e2e8f0; }
+    .tab-btn.active { color: #7aa2f7; border-bottom-color: #4f80ff; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
     /* ── Card ── */
     .card {
-      background: #1e2330;
-      border: 1px solid #2d3348;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
+      background: #1e2330; border: 1px solid #2d3348;
+      border-radius: 10px; padding: 20px; margin-bottom: 20px;
     }
 
-    /* ── Search input row ── */
+    /* ── Inputs ── */
     .search-row { display: flex; gap: 10px; align-items: center; }
-
-    input[type="email"] {
-      flex: 1;
-      padding: 10px 14px;
-      font-size: 0.95rem;
-      background: #0f1117;
-      border: 1px solid #2d3348;
-      border-radius: 6px;
-      color: #e2e8f0;
-      outline: none;
-      transition: border-color 0.15s;
+    input[type="email"], input[type="text"] {
+      flex: 1; padding: 10px 14px; font-size: 0.95rem;
+      background: #0f1117; border: 1px solid #2d3348; border-radius: 6px;
+      color: #e2e8f0; outline: none; transition: border-color 0.15s;
     }
-    input[type="email"]::placeholder { color: #4b5563; }
-    input[type="email"]:focus { border-color: #4f80ff; }
+    input::placeholder { color: #4b5563; }
+    input:focus { border-color: #4f80ff; }
+
+    /* ── Select ── */
+    select {
+      padding: 10px 14px; font-size: 0.88rem;
+      background: #0f1117; border: 1px solid #2d3348; border-radius: 6px;
+      color: #e2e8f0; outline: none; cursor: pointer;
+    }
+    select:focus { border-color: #4f80ff; }
 
     /* ── Buttons ── */
     .btn {
-      padding: 10px 20px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.15s, background 0.15s;
-      white-space: nowrap;
+      padding: 10px 20px; font-size: 0.9rem; font-weight: 600;
+      border-radius: 6px; border: none; cursor: pointer;
+      transition: opacity 0.15s, background 0.15s; white-space: nowrap;
     }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-primary { background: #4f80ff; color: #fff; }
+    .btn-primary  { background: #4f80ff; color: #fff; }
     .btn-primary:hover:not(:disabled) { background: #3b6ef0; }
-    .btn-outline { background: transparent; border: 1px solid #2d3348; color: #94a3b8; }
+    .btn-outline  { background: transparent; border: 1px solid #2d3348; color: #94a3b8; }
     .btn-outline:hover:not(:disabled) { border-color: #4f80ff; color: #4f80ff; }
-    .btn-danger  { background: transparent; border: none; color: #f87171; padding: 2px 6px; font-size: 0.85rem; }
-    .btn-danger:hover { color: #ef4444; }
+    .btn-danger   { background: #7f1d1d; color: #fca5a5; border: none; }
+    .btn-danger:hover:not(:disabled) { background: #991b1b; }
 
-    /* ── Checkbox ── */
+    /* ── Options row ── */
+    .options-row {
+      display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+      margin-top: 12px;
+    }
     .checkbox-row {
       display: flex; align-items: center; gap: 8px;
-      margin-top: 12px; color: #94a3b8; font-size: 0.88rem;
+      color: #94a3b8; font-size: 0.88rem;
     }
     input[type="checkbox"] { accent-color: #4f80ff; width: 14px; height: 14px; }
+
+    /* ── Segmented mode picker ── */
+    .mode-row { display: flex; gap: 6px; }
+    .mode-btn {
+      padding: 7px 16px; font-size: 0.85rem; font-weight: 500;
+      border-radius: 6px; border: 1px solid #2d3348;
+      background: transparent; color: #64748b; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .mode-btn:hover { border-color: #4f80ff; color: #7aa2f7; }
+    .mode-btn.active { background: #4f80ff22; border-color: #4f80ff; color: #7aa2f7; }
 
     /* ── Error / Meta ── */
     .error-msg {
@@ -86,10 +103,15 @@
     .meta { color: #64748b; font-size: 0.82rem; margin: 12px 0 4px; }
     .meta strong { color: #94a3b8; }
 
+    .unavailable-msg {
+      background: #1e1e2d; border: 1px solid #3b3b5c; color: #7aa2f7;
+      border-radius: 6px; padding: 14px 18px; font-size: 0.9rem;
+    }
+
     /* ── Action bar ── */
     .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 
-    /* ── Results table ── */
+    /* ── Results table (holehe) ── */
     .results-card {
       background: #1e2330; border: 1px solid #2d3348;
       border-radius: 10px; overflow: hidden; margin-top: 20px;
@@ -106,208 +128,625 @@
 
     .empty-results { padding: 32px; text-align: center; color: #475569; font-size: 0.9rem; }
 
+    /* ── User-Scanner scanning indicator ── */
+    .progress-bar-wrap {
+      background: #161b27; border-radius: 6px; overflow: hidden;
+      height: 6px; margin: 12px 0;
+    }
+    .progress-bar-fill {
+      height: 100%; background: #4f80ff;
+      transition: width 0.2s ease; width: 0%;
+    }
+    .progress-label { font-size: 0.8rem; color: #64748b; margin-bottom: 6px; }
+
+    .us-scanning-card {
+      background: #1e2330; border: 1px solid #2d3348;
+      border-radius: 10px; padding: 20px; margin-top: 16px;
+    }
+    .us-stats {
+      display: flex; gap: 20px; flex-wrap: wrap;
+      margin: 4px 0 0; font-size: 0.88rem;
+    }
+    .us-stat { color: #64748b; }
+    .us-stat span { font-weight: 700; }
+    .us-stat.found   span { color: #4ade80; }
+    .us-stat.skipped span { color: #94a3b8; }
+    .us-stat.error   span { color: #fb923c; }
+    .us-stat.total   span { color: #7aa2f7; }
+
+    /* ── User-Scanner results table (mirrors holehe) ── */
+    .us-results-card {
+      background: #1e2330; border: 1px solid #2d3348;
+      border-radius: 10px; overflow: hidden; margin-top: 20px;
+    }
+    .us-results-card table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .us-results-card thead tr { background: #161b27; }
+    .us-results-card th { padding: 10px 14px; text-align: left; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .us-results-card td { padding: 8px 14px; border-top: 1px solid #232838; color: #cbd5e1; vertical-align: top; }
+    .us-results-card tr:hover td { background: #232838; }
+    .us-results-card td a { color: #7aa2f7; text-decoration: underline; text-underline-offset: 2px; }
+    .us-results-card td a:hover { color: #a5c0ff; }
+
     /* ── Download modal ── */
     .modal-backdrop {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 100;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 100;
       align-items: center; justify-content: center;
     }
     .modal-backdrop.open { display: flex; }
     .modal {
-      background: #1e2330;
-      border: 1px solid #2d3348;
-      border-radius: 12px;
-      padding: 28px 24px;
-      width: 100%; max-width: 380px;
-      position: relative;
+      background: #1e2330; border: 1px solid #2d3348; border-radius: 12px;
+      padding: 28px 24px; width: 100%; max-width: 380px; position: relative;
     }
     .modal h3 { font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 20px; }
     .modal-close {
       position: absolute; top: 14px; right: 16px;
-      background: none; border: none; color: #64748b;
-      font-size: 1.2rem; cursor: pointer; line-height: 1;
+      background: none; border: none; color: #64748b; font-size: 1.2rem; cursor: pointer;
     }
     .modal-close:hover { color: #e2e8f0; }
     .modal-group { margin-bottom: 18px; }
     .modal-group label.group-label {
       display: block; font-size: 0.78rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.06em;
-      color: #64748b; margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; margin-bottom: 8px;
     }
     .radio-row { display: flex; gap: 8px; }
     .radio-btn {
       flex: 1; padding: 8px 12px; font-size: 0.88rem; font-weight: 500;
-      border-radius: 6px; border: 1px solid #2d3348;
-      background: transparent; color: #94a3b8;
-      cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s;
-      text-align: center;
+      border-radius: 6px; border: 1px solid #2d3348; background: transparent; color: #94a3b8;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s; text-align: center;
     }
     .radio-btn:hover { border-color: #4f80ff; color: #4f80ff; }
     .radio-btn.selected { background: #4f80ff22; border-color: #4f80ff; color: #7aa2f7; }
     .modal-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px; }
 
-    .empty-note { color: #475569; font-size: 0.82rem; line-height: 1.5; }
+    @keyframes hpulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Holehe Web UI</h1>
-      <p>Check which platforms an email address is registered on.</p>
-    </header>
+<div class="container">
+  <header>
+    <h1>OSINT Suite</h1>
+    <p>Email &amp; username intelligence — powered by Holehe and User Scanner.</p>
+  </header>
 
-    <div class="layout">
-      <div class="main-col">
-        <div class="card">
-          <form method="POST" action="/">
-            <div class="search-row">
-              <input type="email" name="email" placeholder="email@example.com"
-                     value="{{ email }}" required autocomplete="off">
-              <button type="submit" class="btn btn-primary">Search</button>
-            </div>
-            <label class="checkbox-row">
-              <input type="checkbox" name="only_used" {% if only_used %}checked{% endif %}>
-              Only show confirmed accounts
-            </label>
-          </form>
+  <!-- ── Tabs ── -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('holehe', this)">Holehe</button>
+    {% if us_available %}
+    <button class="tab-btn" onclick="switchTab('us', this)">User Scanner</button>
+    {% endif %}
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       Tab: Holehe
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="tab-holehe" class="tab-panel active">
+    <div class="card">
+      <div class="search-row">
+        <input type="email" id="h-email" placeholder="email@example.com" autocomplete="off">
+        <button class="btn btn-primary" id="h-scan-btn" onclick="hStartScan()">Search</button>
+        <button class="btn btn-danger"  id="h-stop-btn" onclick="hStopScan()" style="display:none;">Stop</button>
+      </div>
+    </div>
+
+    <div id="h-error" class="error-msg" style="display:none;"></div>
+
+    <!-- Scanning indicator -->
+    <div id="h-scanning-card" class="us-scanning-card" style="display:none;">
+      <div class="meta">Searching <strong id="h-target-display"></strong>…</div>
+      <div class="progress-bar-wrap" style="margin-top:10px;">
+        <div class="progress-bar-fill" id="h-progress-bar" style="width:100%;animation:hpulse 1.2s ease-in-out infinite;"></div>
+      </div>
+      <div class="us-stats" style="margin-top:10px;">
+        <div class="us-stat found">  Found: <span id="h-count-found">0</span></div>
+        <div class="us-stat total">  Scanned: <span id="h-count-total">0</span></div>
+        <div class="us-stat error">  Rate Limited / Error: <span id="h-count-error">0</span></div>
+      </div>
+    </div>
+
+    <!-- Final report -->
+    <div id="h-results-area" style="display:none;">
+      <p class="meta"><span id="h-summary-text"></span></p>
+      <div class="action-bar">
+        <button type="button" class="btn btn-outline" onclick="openModal('holehe')">Download Report</button>
+        <label class="checkbox-row">
+          <input type="checkbox" id="h-only-used" onchange="hRenderTable()"> Show found only
+        </label>
+      </div>
+      <div class="results-card" id="h-results-card">
+        <!-- table injected by JS -->
+      </div>
+    </div>
+  </div><!-- /tab-holehe -->
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       Tab: User Scanner
+  ════════════════════════════════════════════════════════════════════════ -->
+  {% if us_available %}
+  <div id="tab-us" class="tab-panel">
+    <div class="card">
+      <div class="search-row">
+        <input type="text" id="us-target" placeholder="username  or  email@example.com" autocomplete="off">
+        <button class="btn btn-primary" id="us-scan-btn" onclick="usStartScan()">Scan</button>
+        <button class="btn btn-danger"  id="us-stop-btn" onclick="usStopScan()" style="display:none;">Stop</button>
+      </div>
+      <div class="options-row">
+        <div class="mode-row">
+          <button class="mode-btn active" id="mode-email"    onclick="setMode('email')">Email</button>
+          <button class="mode-btn"        id="mode-username" onclick="setMode('username')">Username</button>
         </div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="us-allow-loud"> Include notifying modules
+        </label>
+      </div>
+    </div>
 
-        {% if error %}
-          <div class="error-msg">{{ error }}</div>
-        {% endif %}
+    <div id="us-error" class="error-msg" style="display:none;"></div>
 
-        {% if rows is not none %}
-          {% set found    = rows | selectattr('status', 'equalto', '+') | list %}
-          {% set notfound = rows | selectattr('status', 'equalto', '-') | list %}
-          {% set errored  = rows | rejectattr('status', 'equalto', '+') | rejectattr('status', 'equalto', '-') | list %}
+    <!-- Scanning progress (visible while scan is running) -->
+    <div id="us-scanning-card" class="us-scanning-card" style="display:none;">
+      <div class="meta">
+        Scanning <strong id="us-target-display"></strong>…
+      </div>
+      <p class="progress-label" id="us-progress-label" style="margin-top:10px;">0 / 0</p>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="us-progress-bar"></div>
+      </div>
+      <div class="us-stats">
+        <div class="us-stat found">   Found: <span id="us-count-found">0</span></div>
+        <div class="us-stat total">   Scanned: <span id="us-count-total">0</span></div>
+        <div class="us-stat error">   Errors: <span id="us-count-error">0</span></div>
+        <div class="us-stat skipped"> Skipped: <span id="us-count-skipped">0</span></div>
+      </div>
+    </div>
 
-          <p class="meta">{{ rows | length }} results for <strong>{{ email }}</strong> &mdash; <strong>{{ found | length }}</strong> accounts found</p>
+    <!-- Final report (visible after scan completes) -->
+    <div id="us-results-area" style="display:none;">
+      <p class="meta">
+        <span id="us-summary-text"></span>
+      </p>
+      <div class="action-bar">
+        <button type="button" class="btn btn-outline" onclick="openModal('us')">Download Report</button>
+        <label class="checkbox-row">
+          <input type="checkbox" id="us-found-only" onchange="usRenderTable()"> Show found only
+        </label>
+      </div>
+      <div class="us-results-card" id="us-results-card">
+        <!-- table injected by JS -->
+      </div>
+    </div>
+  </div><!-- /tab-us -->
+  {% else %}
+  <div id="tab-us" class="tab-panel">
+    <div class="unavailable-msg">
+      <strong>user-scanner is not installed.</strong><br>
+      Install it with: <code>pip install user-scanner</code>, then restart this app.
+    </div>
+  </div>
+  {% endif %}
 
-          <div class="action-bar">
-            <button type="button" class="btn btn-outline" onclick="openDownloadModal()">Download Report</button>
-          </div>
-
-          {% if rows %}
-            <div class="results-card">
-              <table>
-                <thead>
-                  <tr>
-                    <th class="tag-found">Found ({{ found | length }})</th>
-                    {% if not only_used %}
-                    <th class="tag-notfound">Not Found ({{ notfound | length }})</th>
-                    <th class="tag-error">Rate Limited / Error ({{ errored | length }})</th>
-                    {% endif %}
-                  </tr>
-                </thead>
-                <tbody>
-                  {% if only_used %}
-                    {% for item in found %}
-                    <tr>
-                      <td class="tag-found">{{ item.site }}</td>
-                    </tr>
-                    {% endfor %}
-                  {% else %}
-                    {% set max_rows = [found|length, notfound|length, errored|length] | max %}
-                    {% for i in range(max_rows) %}
-                    <tr>
-                      <td class="tag-found">{{ found[i].site    if i < found|length    else '' }}</td>
-                      <td class="tag-notfound">{{ notfound[i].site if i < notfound|length else '' }}</td>
-                      <td class="tag-error">{{ errored[i].site  if i < errored|length  else '' }}</td>
-                    </tr>
-                    {% endfor %}
-                  {% endif %}
-                </tbody>
-              </table>
-            </div>
-          {% else %}
-            <div class="results-card">
-              <p class="empty-results">No accounts found for {{ email }}.</p>
-            </div>
-          {% endif %}
-        {% endif %}
-
-      </div><!-- /main-col -->
-
-    </div><!-- /layout -->
-  </div><!-- /container -->
-
-  <!-- Download modal -->
-  <div class="modal-backdrop" id="downloadModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <!-- ── Holehe download modal ── -->
+  <div class="modal-backdrop" id="modal-holehe" role="dialog" aria-modal="true">
     <div class="modal">
-      <button class="modal-close" onclick="closeDownloadModal()" aria-label="Close">&times;</button>
-      <h3 id="modalTitle">Download Report</h3>
-
+      <button class="modal-close" onclick="closeModal('holehe')" aria-label="Close">&times;</button>
+      <h3>Download Holehe Report</h3>
       <div class="modal-group">
         <label class="group-label">Content</label>
         <div class="radio-row">
-          <button type="button" class="radio-btn selected" id="scopeFull" onclick="selectScope('full')">Full report</button>
-          <button type="button" class="radio-btn" id="scopeFound" onclick="selectScope('found')">Found only</button>
+          <button type="button" class="radio-btn selected" id="h-scopeFull"  onclick="hSelectScope('full')">Full report</button>
+          <button type="button" class="radio-btn"          id="h-scopeFound" onclick="hSelectScope('found')">Found only</button>
         </div>
       </div>
-
       <div class="modal-group">
         <label class="group-label">Format</label>
         <div class="radio-row">
-          <button type="button" class="radio-btn selected" id="fmtJson" onclick="selectFmt('json')">JSON</button>
-          <button type="button" class="radio-btn" id="fmtTxt" onclick="selectFmt('txt')">TXT</button>
+          <button type="button" class="radio-btn selected" id="h-fmtJson" onclick="hSelectFmt('json')">JSON</button>
+          <button type="button" class="radio-btn"          id="h-fmtTxt"  onclick="hSelectFmt('txt')">TXT</button>
         </div>
       </div>
-
       <div class="modal-actions">
-        <button type="button" class="btn btn-outline" onclick="closeDownloadModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="submitDownload()">Download</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('holehe')">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="hSubmitDownload()">Download</button>
       </div>
     </div>
   </div>
 
-  <!-- Hidden form used to POST the download -->
-  <form id="downloadForm" method="POST" style="display:none;">
-    <input type="hidden" name="email" value="{{ email }}">
-    <input type="hidden" name="data"  value='{{ rows_json }}'>
-    <input type="hidden" name="scope" id="downloadScope" value="full">
+  <!-- ── User Scanner download modal ── -->
+  <div class="modal-backdrop" id="modal-us" role="dialog" aria-modal="true">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('us')" aria-label="Close">&times;</button>
+      <h3>Download User Scanner Report</h3>
+      <div class="modal-group">
+        <label class="group-label">Content</label>
+        <div class="radio-row">
+          <button type="button" class="radio-btn selected" id="us-scopeFull"  onclick="usSelectScope('full')">Full report</button>
+          <button type="button" class="radio-btn"          id="us-scopeFound" onclick="usSelectScope('found')">Found only</button>
+        </div>
+      </div>
+      <div class="modal-group">
+        <label class="group-label">Format</label>
+        <div class="radio-row">
+          <button type="button" class="radio-btn selected" id="us-fmtJson" onclick="usSelectFmt('json')">JSON</button>
+          <button type="button" class="radio-btn"          id="us-fmtCsv"  onclick="usSelectFmt('csv')">CSV</button>
+          <button type="button" class="radio-btn"          id="us-fmtTxt"  onclick="usSelectFmt('txt')">TXT</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal('us')">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="usSubmitDownload()">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden Holehe download form -->
+  <form id="h-downloadForm" method="POST" style="display:none;">
+    <input type="hidden" name="email" id="h-dl-email" value="">
+    <input type="hidden" name="data"  id="h-dl-data"  value="[]">
+    <input type="hidden" name="scope" id="h-downloadScope" value="full">
   </form>
 
-  <script>
-    let _scope = 'full';
-    let _fmt   = 'json';
+  <!-- Hidden User Scanner download form -->
+  <form id="us-downloadForm" method="POST" action="/us/download/json" style="display:none;">
+    <input type="hidden" name="target" id="us-dl-target" value="">
+    <input type="hidden" name="mode"   id="us-dl-mode"   value="email">
+    <input type="hidden" name="data"   id="us-dl-data"   value="[]">
+    <input type="hidden" name="scope"  id="us-dl-scope"  value="full">
+  </form>
 
-    function openDownloadModal() {
-      document.getElementById('downloadModal').classList.add('open');
-    }
-    function closeDownloadModal() {
-      document.getElementById('downloadModal').classList.remove('open');
-    }
+</div><!-- /container -->
 
-    function selectScope(val) {
-      _scope = val;
-      document.getElementById('scopeFull').classList.toggle('selected', val === 'full');
-      document.getElementById('scopeFound').classList.toggle('selected', val === 'found');
-    }
-    function selectFmt(val) {
-      _fmt = val;
-      document.getElementById('fmtJson').classList.toggle('selected', val === 'json');
-      document.getElementById('fmtTxt').classList.toggle('selected', val === 'txt');
-    }
+<script>
+// ── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const panel = document.getElementById('tab-' + name);
+  if (panel) panel.classList.add('active');
+  history.replaceState(null, '', '#' + name);
+}
 
-    function submitDownload() {
-      const form = document.getElementById('downloadForm');
-      document.getElementById('downloadScope').value = _scope;
-      form.action = '/download/' + _fmt;
-      form.submit();
-      closeDownloadModal();
+// Restore tab from URL hash on load
+(function() {
+  const hash = location.hash.replace('#', '');
+  if (hash) {
+    const btn = document.querySelector(`.tab-btn[onclick*="'${hash}'"]`);
+    if (btn) switchTab(hash, btn);
+  }
+})();
+
+// ── Modal helpers ────────────────────────────────────────────────────────────
+function openModal(which)  { document.getElementById('modal-' + which).classList.add('open'); }
+function closeModal(which) { document.getElementById('modal-' + which).classList.remove('open'); }
+
+document.querySelectorAll('.modal-backdrop').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(el => el.classList.remove('open'));
+});
+
+// ── Holehe ───────────────────────────────────────────────────────────────────
+let _hRows   = [];   // raw rows from holehe: [{status, site}, ...]
+let _hEmail  = '';
+let _hEvt    = null;
+let _hCounts = { found: 0, total: 0, error: 0 };
+
+function hStartScan() {
+  const email = document.getElementById('h-email').value.trim();
+  if (!email) return;
+
+  // Reset
+  if (_hEvt) { _hEvt.close(); _hEvt = null; }
+  _hRows   = [];
+  _hEmail  = email;
+  _hCounts = { found: 0, total: 0, error: 0 };
+
+  document.getElementById('h-error').style.display         = 'none';
+  document.getElementById('h-results-area').style.display  = 'none';
+  document.getElementById('h-scanning-card').style.display = 'block';
+  document.getElementById('h-target-display').textContent  = email;
+  document.getElementById('h-scan-btn').disabled           = true;
+  document.getElementById('h-stop-btn').style.display      = '';
+  hUpdateCounts();
+
+  const url = `/holehe/scan?email=${encodeURIComponent(email)}&only_used=0`;
+  _hEvt = new EventSource(url);
+
+  _hEvt.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'error') {
+      hStopScan();
+      const el = document.getElementById('h-error');
+      el.textContent   = data.message;
+      el.style.display = '';
+      document.getElementById('h-scanning-card').style.display = 'none';
+      return;
     }
+    if (data.type === 'result') {
+      _hRows.push(data.row);
+      _hCounts.total++;
+      if      (data.row.status === '+') _hCounts.found++;
+      else if (data.row.status !== '-') _hCounts.error++;
+      hUpdateCounts();
+    }
+    if (data.type === 'done') {
+      _hEmail = data.email || email;
+      hStopScan(true);
+    }
+  };
+  _hEvt.onerror = function() { hStopScan(true); };
+}
 
-    // Close on backdrop click
-    document.getElementById('downloadModal').addEventListener('click', function(e) {
-      if (e.target === this) closeDownloadModal();
-    });
+function hUpdateCounts() {
+  document.getElementById('h-count-found').textContent = _hCounts.found;
+  document.getElementById('h-count-total').textContent = _hCounts.total;
+  document.getElementById('h-count-error').textContent = _hCounts.error;
+}
 
-    // Close on Escape
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeDownloadModal();
-    });
-  </script>
+function hStopScan(finished) {
+  if (_hEvt) { _hEvt.close(); _hEvt = null; }
+  document.getElementById('h-scan-btn').disabled           = false;
+  document.getElementById('h-stop-btn').style.display      = 'none';
+  document.getElementById('h-scanning-card').style.display = 'none';
+  if (finished && _hRows.length > 0) hRenderTable();
+}
+
+function hRenderTable() {
+  const onlyUsed = document.getElementById('h-only-used').checked;
+  const found    = _hRows.filter(r => r.status === '+');
+  const notfound = _hRows.filter(r => r.status === '-');
+  const errored  = _hRows.filter(r => r.status !== '+' && r.status !== '-');
+
+  document.getElementById('h-summary-text').innerHTML =
+    `${_hRows.length} sites checked for <strong>${escHtml(_hEmail)}</strong> — <strong>${found.length}</strong> accounts found`;
+
+  let html = '<table><thead><tr>';
+  html += `<th class="tag-found">Found (${found.length})</th>`;
+  if (!onlyUsed) {
+    html += `<th class="tag-notfound">Not Found (${notfound.length})</th>`;
+    html += `<th class="tag-error">Rate Limited / Error (${errored.length})</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  const rowCount = onlyUsed ? found.length : Math.max(found.length, notfound.length, errored.length);
+  if (rowCount === 0) {
+    html += `<tr><td colspan="${onlyUsed ? 1 : 3}" class="empty-results">No accounts found for ${escHtml(_hEmail)}.</td></tr>`;
+  } else {
+    for (let i = 0; i < rowCount; i++) {
+      html += '<tr>';
+      html += `<td class="tag-found">${found[i]    ? escHtml(found[i].site)    : ''}</td>`;
+      if (!onlyUsed) {
+        html += `<td class="tag-notfound">${notfound[i] ? escHtml(notfound[i].site) : ''}</td>`;
+        html += `<td class="tag-error">${errored[i]  ? escHtml(errored[i].site)  : ''}</td>`;
+      }
+      html += '</tr>';
+    }
+  }
+  html += '</tbody></table>';
+
+  document.getElementById('h-results-card').innerHTML     = html;
+  document.getElementById('h-results-area').style.display = 'block';
+}
+
+// Allow Enter key
+document.getElementById('h-email') && document.getElementById('h-email').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') hStartScan();
+});
+
+// ── User Scanner ─────────────────────────────────────────────────────────────
+let _usMode   = 'email';
+let _usRows   = [];       // all received result objects
+let _usEvt    = null;     // active EventSource
+let _usCounts = { found: 0, total: 0, error: 0, skipped: 0 };
+
+function setMode(m) {
+  _usMode = m;
+  document.getElementById('mode-email').classList.toggle('active',    m === 'email');
+  document.getElementById('mode-username').classList.toggle('active', m === 'username');
+  document.getElementById('us-target').value = '';
+}
+
+function usStartScan() {
+  const target = document.getElementById('us-target').value.trim();
+  if (!target) return;
+
+  // Reset
+  usStopScan();
+  _usRows   = [];
+  _usCounts = { found: 0, total: 0, error: 0, skipped: 0 };
+
+  document.getElementById('us-error').style.display        = 'none';
+  document.getElementById('us-results-area').style.display = 'none';
+  document.getElementById('us-scanning-card').style.display = 'block';
+  document.getElementById('us-target-display').textContent  = target;
+  document.getElementById('us-results-card').innerHTML      = '';
+  usUpdateCounts();
+  usSetProgress(0, 0);
+
+  const noNsfw    = '0';
+  const allowLoud = document.getElementById('us-allow-loud').checked ? '1' : '0';
+  const url = `/us/scan?target=${encodeURIComponent(target)}&mode=${_usMode}&no_nsfw=${noNsfw}&allow_loud=${allowLoud}`;
+
+  document.getElementById('us-scan-btn').disabled         = true;
+  document.getElementById('us-stop-btn').style.display    = '';
+
+  _usEvt = new EventSource(url);
+
+  _usEvt.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'error') {
+      showUsError(data.message);
+      usStopScan();
+      return;
+    }
+    if (data.type === 'done') {
+      usStopScan(true);
+      return;
+    }
+    if (data.type === 'result') {
+      _usRows.push(data);
+      usUpdateCounts(data);
+      usSetProgress(data.done, data.total);
+    }
+  };
+
+  _usEvt.onerror = function() { usStopScan(true); };
+}
+
+function usStopScan(finished) {
+  if (_usEvt) { _usEvt.close(); _usEvt = null; }
+  document.getElementById('us-scan-btn').disabled      = false;
+  document.getElementById('us-stop-btn').style.display = 'none';
+  document.getElementById('us-scanning-card').style.display = 'none';
+
+  if (finished && _usRows.length > 0) {
+    usRenderTable();
+    document.getElementById('us-results-area').style.display = 'block';
+  }
+}
+
+function showUsError(msg) {
+  document.getElementById('us-scanning-card').style.display = 'none';
+  const el = document.getElementById('us-error');
+  el.textContent   = msg;
+  el.style.display = '';
+}
+
+function usUpdateCounts(data) {
+  if (data) {
+    _usCounts.total++;
+    const code = data.status_code;
+    if      (code === 0) _usCounts.found++;
+    else if (code === 2) _usCounts.error++;
+    else if (code === 3) _usCounts.skipped++;
+  }
+  document.getElementById('us-count-found').textContent   = _usCounts.found;
+  document.getElementById('us-count-total').textContent   = _usCounts.total;
+  document.getElementById('us-count-error').textContent   = _usCounts.error;
+  document.getElementById('us-count-skipped').textContent = _usCounts.skipped;
+}
+
+function usSetProgress(done, total) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('us-progress-bar').style.width       = pct + '%';
+  document.getElementById('us-progress-label').textContent = total > 0 ? `${done} / ${total}` : '';
+}
+
+// Build the holehe-style 3-column table from collected results
+function usRenderTable() {
+  const onlyFound  = document.getElementById('us-found-only').checked;
+  const isEmail    = (_usMode === 'email');
+  const foundLabel = isEmail ? 'Registered' : 'Found';
+  const notLabel   = isEmail ? 'Not Registered' : 'Not Found';
+
+  const found   = _usRows.filter(r => r.status_code === 0);
+  const notfound = _usRows.filter(r => r.status_code === 1);
+  const errored  = _usRows.filter(r => r.status_code !== 0 && r.status_code !== 1);
+
+  const target = document.getElementById('us-target').value.trim();
+  document.getElementById('us-summary-text').innerHTML =
+    `${_usRows.length} sites checked for <strong>${escHtml(target)}</strong> — <strong>${found.length}</strong> ${foundLabel.toLowerCase()}`;
+
+  // Links only on found username results — those URLs point directly to the profile.
+  // For email scans the URL is just the site homepage, not useful as a direct link.
+  function siteCell(r, isFound) {
+    if (!r) return '';
+    const canLink = isFound && !isEmail && r.url;
+    return canLink
+      ? `<a href="${escHtml(r.url)}" target="_blank" rel="noopener">${escHtml(r.site_name)}</a>`
+      : escHtml(r.site_name);
+  }
+
+  let html = '<table><thead><tr>';
+  html += `<th class="tag-found">${escHtml(foundLabel)} (${found.length})</th>`;
+  if (!onlyFound) {
+    html += `<th class="tag-notfound">${escHtml(notLabel)} (${notfound.length})</th>`;
+    html += `<th class="tag-error">Errors / Skipped (${errored.length})</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  const rows = onlyFound ? found.length : Math.max(found.length, notfound.length, errored.length);
+
+  if (rows === 0) {
+    const cols = onlyFound ? 1 : 3;
+    html += `<tr><td colspan="${cols}" class="empty-results">No results.</td></tr>`;
+  } else {
+    for (let i = 0; i < rows; i++) {
+      html += '<tr>';
+      html += `<td class="tag-found">${found[i]   ? siteCell(found[i], true)     : ''}</td>`;
+      if (!onlyFound) {
+        html += `<td class="tag-notfound">${notfound[i] ? siteCell(notfound[i], false) : ''}</td>`;
+        html += `<td class="tag-error">${errored[i]  ? siteCell(errored[i], false)  : ''}</td>`;
+      }
+      html += '</tr>';
+    }
+  }
+
+  html += '</tbody></table>';
+  document.getElementById('us-results-card').innerHTML = html;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── User Scanner download modal ──────────────────────────────────────────────
+let _usScope = 'full', _usFmt = 'json';
+function usSelectScope(v) {
+  _usScope = v;
+  document.getElementById('us-scopeFull').classList.toggle('selected',  v === 'full');
+  document.getElementById('us-scopeFound').classList.toggle('selected', v === 'found');
+}
+function usSelectFmt(v) {
+  _usFmt = v;
+  document.getElementById('us-fmtJson').classList.toggle('selected', v === 'json');
+  document.getElementById('us-fmtCsv').classList.toggle('selected',  v === 'csv');
+  document.getElementById('us-fmtTxt').classList.toggle('selected',  v === 'txt');
+}
+function usSubmitDownload() {
+  const target = document.getElementById('us-target').value.trim();
+  document.getElementById('us-dl-target').value = target;
+  document.getElementById('us-dl-mode').value   = _usMode;
+  document.getElementById('us-dl-data').value   = JSON.stringify(_usRows);
+  document.getElementById('us-dl-scope').value  = _usScope;
+  const form = document.getElementById('us-downloadForm');
+  form.action = '/us/download/' + _usFmt;
+  form.submit();
+  closeModal('us');
+}
+
+// ── Holehe download modal ────────────────────────────────────────────────────
+let _hScope = 'full', _hFmt = 'json';
+function hSelectScope(v) {
+  _hScope = v;
+  document.getElementById('h-scopeFull').classList.toggle('selected',  v === 'full');
+  document.getElementById('h-scopeFound').classList.toggle('selected', v === 'found');
+}
+function hSelectFmt(v) {
+  _hFmt = v;
+  document.getElementById('h-fmtJson').classList.toggle('selected', v === 'json');
+  document.getElementById('h-fmtTxt').classList.toggle('selected',  v === 'txt');
+}
+function hSubmitDownload() {
+  document.getElementById('h-dl-email').value        = _hEmail;
+  document.getElementById('h-dl-data').value         = JSON.stringify(_hRows);
+  document.getElementById('h-downloadScope').value   = _hScope;
+  const form = document.getElementById('h-downloadForm');
+  form.action = '/download/' + _hFmt;
+  form.submit();
+  closeModal('holehe');
+}
+
+// Allow Enter key for user scanner
+document.getElementById('us-target') && document.getElementById('us-target').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') usStartScan();
+});
+</script>
 </body>
 </html>
