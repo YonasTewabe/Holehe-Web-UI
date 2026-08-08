@@ -3,13 +3,22 @@ import inspect
 import json
 import re
 import subprocess
-import sys
 import tempfile
 from datetime import datetime, timezone
-from pathlib import Path
 
 from email_validator import EmailNotValidError, validate_email
 from flask import Flask, Response, render_template, request, stream_with_context
+from user_scanner.core.helpers import (
+    ScanConfig,
+    load_categories,
+    load_modules,
+    get_scan_func,
+    get_site_name,
+    find_category,
+    is_loud,
+    is_valid_email,
+)
+from user_scanner.core.result import Result, Status
 
 app = Flask(__name__)
 
@@ -68,68 +77,11 @@ def run_holehe(email: str, only_used: bool = True):
 # User-Scanner helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _simple_is_valid_email(email: str) -> bool:
-    """Basic email format check used as fallback."""
-    return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
-
-
-def _us_import():
-    """Lazy-import user_scanner so the app still starts even if it's not installed."""
-    try:
-        from user_scanner.core.helpers import (
-            ScanConfig,
-            load_categories,
-            load_modules,
-            get_scan_func,
-            get_site_name,
-            find_category,
-            is_loud,
-        )
-        from user_scanner.core.result import Result, Status
-
-        # is_valid_email was added in a later version — fall back gracefully
-        try:
-            from user_scanner.core.helpers import is_valid_email
-        except ImportError:
-            is_valid_email = _simple_is_valid_email
-
-        return dict(
-            ScanConfig=ScanConfig,
-            is_valid_email=is_valid_email,
-            load_categories=load_categories,
-            load_modules=load_modules,
-            get_scan_func=get_scan_func,
-            get_site_name=get_site_name,
-            find_category=find_category,
-            is_loud=is_loud,
-            Result=Result,
-            Status=Status,
-        )
-    except ImportError:
-        return None
-
-
-def _us_available() -> bool:
-    return _us_import() is not None
-
-
 async def _us_scan_all(target: str, is_email: bool, no_nsfw: bool, allow_loud: bool):
     """
     Async generator that yields (Result, done_count, total_count) tuples
     as each module completes.
     """
-    us = _us_import()
-    if us is None:
-        return
-
-    load_categories = us["load_categories"]
-    load_modules    = us["load_modules"]
-    get_scan_func   = us["get_scan_func"]
-    get_site_name   = us["get_site_name"]
-    is_loud         = us["is_loud"]
-    Result          = us["Result"]
-    ScanConfig      = us["ScanConfig"]
-
     categories = load_categories(is_email=is_email, no_nsfw=no_nsfw)
     all_modules = []
     for cat_name, cat_path in categories.items():
@@ -195,10 +147,7 @@ def _us_result_to_dict(r) -> dict:
 
 @app.route("/", methods=["GET"])
 def index():
-    return render_template(
-        "index.html",
-        us_available=_us_available(),
-    )
+    return render_template("index.html")
 
 
 @app.route("/holehe/scan")
@@ -342,12 +291,6 @@ def us_scan():
       no_nsfw     – '1' to exclude adult content
       allow_loud  – '1' to include notifying (loud) modules
     """
-    if not _us_available():
-        def _err():
-            yield "data: " + json.dumps({"type": "error", "message": "user-scanner is not installed."}) + "\n\n"
-        return Response(stream_with_context(_err()), mimetype="text/event-stream")
-
-    us         = _us_import()
     target     = request.args.get("target", "").strip()
     mode       = request.args.get("mode", "email").strip()
     no_nsfw    = request.args.get("no_nsfw", "0") == "1"
@@ -359,7 +302,7 @@ def us_scan():
             yield "data: " + json.dumps({"type": "error", "message": "Please enter a target."}) + "\n\n"
         return Response(stream_with_context(_err()), mimetype="text/event-stream")
 
-    if is_email and not us["is_valid_email"](target):
+    if is_email and not is_valid_email(target):
         def _err():
             yield "data: " + json.dumps({"type": "error", "message": f"'{target}' is not a valid email address."}) + "\n\n"
         return Response(stream_with_context(_err()), mimetype="text/event-stream")

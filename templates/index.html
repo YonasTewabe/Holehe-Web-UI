@@ -103,11 +103,6 @@
     .meta { color: #64748b; font-size: 0.82rem; margin: 12px 0 4px; }
     .meta strong { color: #94a3b8; }
 
-    .unavailable-msg {
-      background: #1e1e2d; border: 1px solid #3b3b5c; color: #7aa2f7;
-      border-radius: 6px; padding: 14px 18px; font-size: 0.9rem;
-    }
-
     /* ── Action bar ── */
     .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 
@@ -215,9 +210,7 @@
   <!-- ── Tabs ── -->
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('holehe', this)">Holehe</button>
-    {% if us_available %}
     <button class="tab-btn" onclick="switchTab('us', this)">User Scanner</button>
-    {% endif %}
   </div>
 
   <!-- ════════════════════════════════════════════════════════════════════════
@@ -265,7 +258,6 @@
   <!-- ════════════════════════════════════════════════════════════════════════
        Tab: User Scanner
   ════════════════════════════════════════════════════════════════════════ -->
-  {% if us_available %}
   <div id="tab-us" class="tab-panel">
     <div class="card">
       <div class="search-row">
@@ -319,14 +311,6 @@
       </div>
     </div>
   </div><!-- /tab-us -->
-  {% else %}
-  <div id="tab-us" class="tab-panel">
-    <div class="unavailable-msg">
-      <strong>user-scanner is not installed.</strong><br>
-      Install it with: <code>pip install user-scanner</code>, then restart this app.
-    </div>
-  </div>
-  {% endif %}
 
   <!-- ── Holehe download modal ── -->
   <div class="modal-backdrop" id="modal-holehe" role="dialog" aria-modal="true">
