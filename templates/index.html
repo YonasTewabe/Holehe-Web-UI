@@ -106,28 +106,6 @@
 
     .empty-results { padding: 32px; text-align: center; color: #475569; font-size: 0.9rem; }
 
-    /* ── Saved sidebar ── */
-    .saved-col { width: 220px; flex-shrink: 0; }
-    .saved-card {
-      background: #1e2330; border: 1px solid #2d3348;
-      border-radius: 10px; padding: 16px; position: sticky; top: 20px;
-    }
-    .saved-card h2 {
-      font-size: 0.85rem; font-weight: 600; color: #94a3b8;
-      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;
-    }
-    .saved-list { list-style: none; }
-    .saved-list li {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 6px 0; border-bottom: 1px solid #232838;
-    }
-    .saved-list li:last-child { border-bottom: none; }
-    .saved-email-btn {
-      background: none; border: none; color: #7aa2f7; cursor: pointer;
-      font-size: 0.85rem; text-align: left; padding: 0;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 155px;
-    }
-    .saved-email-btn:hover { color: #4f80ff; text-decoration: underline; }
     .empty-note { color: #475569; font-size: 0.82rem; line-height: 1.5; }
   </style>
 </head>
@@ -140,8 +118,6 @@
 
     <div class="layout">
       <div class="main-col">
-
-        <!-- Search form -->
         <div class="card">
           <form method="POST" action="/">
             <div class="search-row">
@@ -168,10 +144,6 @@
           <p class="meta">{{ rows | length }} result(s) for <strong>{{ email }}</strong></p>
 
           <div class="action-bar">
-            <form method="POST" action="/save-email" style="display:contents;">
-              <input type="hidden" name="email" value="{{ email }}" >
-              <button type="submit" class="btn btn-outline">Save email</button>
-            </form>
             <form method="POST" action="/download/json" style="display:contents;">
               <input type="hidden" name="email" value="{{ email }}">
               <input type="hidden" name="data" value='{{ rows_json }}'>
@@ -214,32 +186,6 @@
         {% endif %}
 
       </div><!-- /main-col -->
-
-      <!-- Saved emails sidebar -->
-      <div class="saved-col">
-        <div class="saved-card">
-          <h2>Saved Emails</h2>
-          {% if saved_emails %}
-            <ul class="saved-list">
-              {% for saved in saved_emails %}
-              <li>
-                <form method="POST" action="/" style="flex:1; min-width:0;">
-                  <input type="hidden" name="email" value="{{ saved }}">
-                  {% if only_used %}<input type="hidden" name="only_used" value="on">{% endif %}
-                  <button type="submit" class="saved-email-btn" title="{{ saved }}">{{ saved }}</button>
-                </form>
-                <form method="POST" action="/delete-email">
-                  <input type="hidden" name="email" value="{{ saved }}">
-                  <button type="submit" class="btn btn-danger" title="Remove">&times;</button>
-                </form>
-              </li>
-              {% endfor %}
-            </ul>
-          {% else %}
-            <p class="empty-note">No saved emails yet. Run a search, then click "Save email".</p>
-          {% endif %}
-        </div>
-      </div>
 
     </div><!-- /layout -->
   </div><!-- /container -->

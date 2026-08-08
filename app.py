@@ -1,5 +1,4 @@
 import json
-import os
 import re
 import subprocess
 from datetime import datetime, timezone
@@ -9,43 +8,11 @@ from flask import Flask, Response, render_template, request
 
 app = Flask(__name__)
 
-# Where local data is persisted. Mount a volume to DATA_DIR so it survives
-# container restarts.
-DATA_DIR = os.environ.get("DATA_DIR", "/app/data")
-SAVED_EMAILS_FILE = os.path.join(DATA_DIR, "saved_emails.json")
-
 # Matches lines like:
 # [+] Twitter
 # [-] Adobe
 # [x] Amazon
 LINE_RE = re.compile(r"^\[([+\-x])\]\s+(.*)$")
-
-
-def _load_json_list(path):
-    if not os.path.exists(path):
-        return []
-    try:
-        with open(path, "r") as f:
-            data = json.load(f)
-            if isinstance(data, list):
-                return data
-    except (json.JSONDecodeError, OSError):
-        pass
-    return []
-
-
-def _save_json(path, data):
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
-
-
-def load_saved_emails():
-    return _load_json_list(SAVED_EMAILS_FILE)
-
-
-def save_saved_emails(emails):
-    _save_json(SAVED_EMAILS_FILE, emails)
 
 
 def check_email(email: str, check_dns: bool = True):
@@ -134,45 +101,6 @@ def index():
         email=email,
         only_used=only_used,
         error=error,
-        saved_emails=load_saved_emails(),
-    )
-
-
-@app.route("/save-email", methods=["POST"])
-def save_email():
-    email = request.form.get("email", "").strip()
-    if email:
-        normalized, validation_error = check_email(email)
-        if not validation_error:
-            emails = load_saved_emails()
-            if normalized not in emails:
-                emails.append(normalized)
-                save_saved_emails(emails)
-    return render_template(
-        "index.html",
-        rows=None,
-        rows_json="[]",
-        email=email,
-        only_used=False,
-        error=None,
-        saved_emails=load_saved_emails(),
-    )
-
-
-@app.route("/delete-email", methods=["POST"])
-def delete_email():
-    email = request.form.get("email", "").strip()
-    emails = load_saved_emails()
-    emails = [e for e in emails if e != email]
-    save_saved_emails(emails)
-    return render_template(
-        "index.html",
-        rows=None,
-        rows_json="[]",
-        email="",
-        only_used=False,
-        error=None,
-        saved_emails=emails,
     )
 
 
