@@ -1,13 +1,22 @@
 import asyncio
 import inspect
 import json
+import os
 import re
 import subprocess
 import tempfile
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
 from email_validator import EmailNotValidError, validate_email
-from flask import Flask, Response, render_template, request, stream_with_context
+from flask import Flask, Response, render_template, request, stream_with_context, redirect, url_for, flash, session
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
+
+# Load environment variables
+load_dotenv()
+
 from user_scanner.core.helpers import (
     ScanConfig,
     load_categories,
@@ -26,6 +35,199 @@ except ImportError:
         return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
 
 app = Flask(__name__)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Database config
+# ─────────────────────────────────────────────────────────────────────────────
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Convert postgresql:// to postgresql+psycopg:// for psycopg3
+db_url = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost/osint_suite')
+if db_url.startswith('postgresql://'):
+    db_url = db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Database Models
+# ─────────────────────────────────────────────────────────────────────────────
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    saved_searches = db.relationship('SavedSearch', backref='user', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password):
+        return bcrypt.check_password_hash(self.password_hash, password)
+
+
+class SavedSearch(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    target = db.Column(db.String(255), nullable=False)
+    scan_type = db.Column(db.String(20), nullable=False)  # 'holehe' or 'us'
+    mode = db.Column(db.String(20), nullable=True)  # 'email' or 'username' for us
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+# Create tables
+with app.app_context():
+    db.create_all()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Auth Routes
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+
+        if not email or not password:
+            flash('All fields are required.', 'error')
+            return redirect(url_for('register'))
+
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists.', 'error')
+            return redirect(url_for('register'))
+
+        user = User(email=email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid email or password.', 'error')
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Search History Routes
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route('/saved')
+@login_required
+def saved_searches():
+    searches = SavedSearch.query.filter_by(user_id=current_user.id).order_by(
+        SavedSearch.created_at.desc()
+    ).all()
+    return render_template('saved.html', searches=searches)
+
+
+@app.route('/save', methods=['POST'])
+@login_required
+def save_search():
+    target = request.form.get('target', '').strip()
+    scan_type = request.form.get('scan_type', '').strip()
+    mode = request.form.get('mode', '').strip()
+
+    if not target or not scan_type:
+        return {'ok': False, 'error': 'Missing required fields.'}, 400
+
+    existing = SavedSearch.query.filter_by(
+        user_id=current_user.id,
+        target=target,
+        scan_type=scan_type
+    ).first()
+
+    if not existing:
+        saved = SavedSearch(
+            user_id=current_user.id,
+            target=target,
+            scan_type=scan_type,
+            mode=mode if mode else None
+        )
+        db.session.add(saved)
+        db.session.commit()
+
+    searches = SavedSearch.query.filter_by(user_id=current_user.id).order_by(
+        SavedSearch.created_at.desc()
+    ).all()
+    return {'ok': True, 'searches': _serialize_searches(searches)}
+
+
+@app.route('/saved/delete/<int:search_id>', methods=['POST'])
+@login_required
+def delete_saved(search_id):
+    search = SavedSearch.query.filter_by(id=search_id, user_id=current_user.id).first()
+    if search:
+        db.session.delete(search)
+        db.session.commit()
+    searches = SavedSearch.query.filter_by(user_id=current_user.id).order_by(
+        SavedSearch.created_at.desc()
+    ).all()
+    return {'ok': True, 'searches': _serialize_searches(searches)}
+
+
+def _serialize_searches(searches):
+    return [
+        {
+            'id': s.id,
+            'target': s.target,
+            'scan_type': s.scan_type,
+            'mode': s.mode or '',
+        }
+        for s in searches
+    ]
+
+
+
+def save_search_db(target, scan_type, mode):
+    """Save a search to database (only for logged-in users)."""
+    if current_user.is_authenticated:
+        existing = SavedSearch.query.filter_by(
+            user_id=current_user.id,
+            target=target,
+            scan_type=scan_type
+        ).first()
+        if not existing:
+            saved = SavedSearch(
+                user_id=current_user.id,
+                target=target,
+                scan_type=scan_type,
+                mode=mode if mode else None
+            )
+            db.session.add(saved)
+            db.session.commit()
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Holehe helpers
@@ -152,7 +354,19 @@ def _us_result_to_dict(r) -> dict:
 
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html")
+    saved_searches = []
+    if current_user.is_authenticated:
+        saved_searches = SavedSearch.query.filter_by(
+            user_id=current_user.id
+        ).order_by(SavedSearch.created_at.desc()).all()
+
+    # Check for query params to auto-start search from saved page
+    auto_target = request.args.get('target', '').strip()
+    auto_type = request.args.get('type', '').strip()
+    auto_mode = request.args.get('mode', '').strip()
+
+    return render_template("index.html", saved_searches=saved_searches,
+                           auto_target=auto_target, auto_type=auto_type, auto_mode=auto_mode)
 
 
 @app.route("/holehe/scan")
@@ -226,6 +440,10 @@ def holehe_scan():
             return
 
         yield "data: " + json.dumps({"type": "done", "email": normalized, "only_used": only_used}) + "\n\n"
+
+        # Save to history (auto-save option can be enabled via UI later)
+        found_count = sum(1 for r in rows if r.get("status") == "+")
+        save_search_db(normalized, "holehe", None)
 
     return Response(
         generate(),
@@ -316,6 +534,10 @@ def us_scan():
     def generate():
         yield "data: " + json.dumps({"type": "start", "target": target, "mode": mode}) + "\n\n"
 
+        # Track counts for history
+        found_count = 0
+        total_count = 0
+
         loop = asyncio.new_event_loop()
         try:
             agen = _us_scan_all(target, is_email, no_nsfw, allow_loud)
@@ -326,6 +548,12 @@ def us_scan():
                     data["type"]  = "result"
                     data["done"]  = done
                     data["total"] = total
+
+                    # Track found count (status_code 0 = found)
+                    total_count = total
+                    if data.get("status_code") == 0:
+                        found_count += 1
+
                     yield "data: " + json.dumps(data) + "\n\n"
                 except StopAsyncIteration:
                     break
@@ -333,6 +561,9 @@ def us_scan():
             loop.close()
 
         yield "data: " + json.dumps({"type": "done"}) + "\n\n"
+
+        # Save to history
+        save_search_db(target, "us", mode)
 
     return Response(
         generate(),

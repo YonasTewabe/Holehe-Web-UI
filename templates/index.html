@@ -12,15 +12,113 @@
       background: #0f1117;
       color: #e2e8f0;
       min-height: 100vh;
-      padding: 40px 16px;
     }
 
-    .container { max-width: 980px; margin: 0 auto; }
+    /* ── Two-panel page layout ── */
+    body { padding: 0; }
+    .page-layout {
+      display: flex;
+      min-height: 100vh;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Left panel — Saved */
+    .saved-panel {
+      width: 280px;
+      flex-shrink: 0;
+      background: #13161f;
+      border-right: 1px solid #2d3348;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .saved-panel-header {
+      padding: 28px 20px 16px;
+      border-bottom: 1px solid #2d3348;
+    }
+    .saved-panel-header h2 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin: 0;
+    }
+    .saved-list { padding: 12px 12px; flex: 1; }
+    .saved-item {
+      display: flex; align-items: center;
+      padding: 9px 10px; border-radius: 7px; margin-bottom: 4px;
+      background: transparent; border: 1px solid transparent;
+      cursor: pointer; transition: background 0.12s, border-color 0.12s;
+      gap: 8px;
+    }
+    .saved-item:hover { background: #1e2330; border-color: #2d3348; }
+    .saved-item-body {
+      flex: 1; min-width: 0;
+    }
+    .saved-target {
+      font-family: monospace; font-size: 0.8rem; color: #e2e8f0;
+      display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .saved-item:hover .saved-target { color: #7aa2f7; }
+    .saved-type-badge {
+      display: inline-block;
+      margin-top: 3px;
+      font-size: 0.62rem; font-weight: 600;
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .badge-holehe { background: #1e3a5f; color: #7aa2f7; }
+    .badge-us     { background: #1a2f1e; color: #4ade80; }
+    .saved-delete {
+      background: none; border: none; color: #475569; cursor: pointer;
+      font-size: 1rem; padding: 2px 5px; border-radius: 4px;
+      flex-shrink: 0; opacity: 0; transition: opacity 0.1s, color 0.1s;
+    }
+    .saved-item:hover .saved-delete { opacity: 1; }
+    .saved-delete:hover { color: #fca5a5; background: #2d1515; }
+    .empty-saved {
+      color: #475569; font-size: 0.82rem; text-align: center;
+      padding: 24px 12px; line-height: 1.6;
+    }
+    .empty-saved a { color: #4f80ff; text-decoration: none; }
+    .empty-saved a:hover { text-decoration: underline; }
+
+    /* Right panel — Scanner */
+    .scanner-panel {
+      flex: 1;
+      min-width: 0;
+      padding: 40px 40px 60px;
+      overflow-y: auto;
+    }
+
+    /* keep old .container for modals/forms that reference it */
+    .container { max-width: 100%; margin: 0; display: block; }
+    .main-content { width: 100%; }
+
+    .tag { padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; }
+    .tag-holehe { background: #1e3a5f; color: #7aa2f7; }
+    .tag-us { background: #1a2f1e; color: #4ade80; }
+    .saved-target-cell { cursor: pointer; font-family: monospace; }
+    .saved-target-cell:hover { color: #7aa2f7; }
+    .date-cell { color: #64748b; font-size: 0.85rem; }
+    .delete-btn {
+      background: transparent; border: none; color: #fb923c;
+      cursor: pointer; font-size: 0.85rem;
+      padding: 6px 12px; border-radius: 6px; margin-left: 8px;
+    }
+    .delete-btn:hover { background: #2d1515; }
 
     /* ── Header ── */
-    header { margin-bottom: 28px; }
+    header { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-start; }
     header h1 { font-size: 1.6rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.02em; }
     header p  { margin-top: 6px; color: #94a3b8; font-size: 0.95rem; }
+    .nav { display: flex; gap: 12px; align-items: center; }
+    .nav a { color: #64748b; text-decoration: none; font-size: 0.9rem; }
+    .nav a:hover { color: #4f80ff; }
 
     /* ── Tabs ── */
     .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid #2d3348; }
@@ -198,13 +296,62 @@
       0%, 100% { opacity: 1; }
       50%       { opacity: 0.35; }
     }
-  </style>
+</style>
 </head>
 <body>
-<div class="container">
+<div class="page-layout">
+
+  <!-- ══════════════════════════════════════════════════════
+       Left panel — Saved Searches
+  ══════════════════════════════════════════════════════ -->
+  <aside class="saved-panel">
+    <div class="saved-panel-header">
+      <h2>Saved Searches</h2>
+    </div>
+    <div class="saved-list">
+      {% if current_user.is_authenticated %}
+        {% if saved_searches %}
+          {% for search in saved_searches %}
+          <div class="saved-item" onclick="runSavedSearch('{{ search.target|e }}', '{{ search.scan_type|e }}', '{{ search.mode|default('')|e }}')">
+            <div class="saved-item-body">
+              <span class="saved-target">{{ search.target }}</span>
+              <span class="saved-type-badge badge-{{ search.scan_type }}">
+                {% if search.scan_type == 'holehe' %}Holehe{% else %}User Scanner{% endif %}
+                {% if search.mode %}· {{ search.mode }}{% endif %}
+              </span>
+            </div>
+            <button type="button" class="saved-delete" onclick="event.stopPropagation(); deleteSaved({{ search.id }})" title="Delete">&times;</button>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="empty-saved">No saved searches yet.<br>Run a scan and hit Save.</p>
+        {% endif %}
+      {% else %}
+        <p class="empty-saved"><a href="{{ url_for('login') }}">Log in</a> to save searches.</p>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════
+       Right panel — Scanner
+  ══════════════════════════════════════════════════════ -->
+  <main class="scanner-panel">
+  <div class="container">
+  <div class="main-content">
   <header>
-    <h1>OSINT Suite</h1>
-    <p>Email &amp; username intelligence — powered by Holehe and User Scanner.</p>
+    <div>
+      <h1>OSINT Suite</h1>
+      <p>Email &amp; username intelligence — powered by Holehe and User Scanner.</p>
+    </div>
+    <div class="nav">
+      {% if current_user.is_authenticated %}
+        <span style="color:#64748b;font-size:0.9rem;">{{ current_user.email }}</span>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+      {% endif %}
+    </div>
   </header>
 
   <!-- ── Tabs ── -->
@@ -245,6 +392,9 @@
       <p class="meta"><span id="h-summary-text"></span></p>
       <div class="action-bar">
         <button type="button" class="btn btn-outline" onclick="openModal('holehe')">Download Report</button>
+        {% if current_user.is_authenticated %}
+        <button type="button" class="btn btn-outline" onclick="hSaveSearch()">Save</button>
+        {% endif %}
         <label class="checkbox-row">
           <input type="checkbox" id="h-only-used" onchange="hRenderTable()"> Show found only
         </label>
@@ -302,6 +452,9 @@
       </p>
       <div class="action-bar">
         <button type="button" class="btn btn-outline" onclick="openModal('us')">Download Report</button>
+        {% if current_user.is_authenticated %}
+        <button type="button" class="btn btn-outline" onclick="usSaveSearch()">Save</button>
+        {% endif %}
         <label class="checkbox-row">
           <input type="checkbox" id="us-found-only" onchange="usRenderTable()"> Show found only
         </label>
@@ -380,7 +533,11 @@
     <input type="hidden" name="scope"  id="us-dl-scope"  value="full">
   </form>
 
-</div><!-- /container -->
+  </div><!-- /main-content -->
+  </div><!-- /container -->
+  </main><!-- /scanner-panel -->
+
+</div><!-- /page-layout -->
 
 <script>
 // ── Tab switching ────────────────────────────────────────────────────────────
@@ -401,6 +558,31 @@ function switchTab(name, btn) {
     if (btn) switchTab(hash, btn);
   }
 })();
+
+// Auto-start search from saved page
+{% if auto_target %}
+(function() {
+  setTimeout(function() {
+    runSavedSearch('{{ auto_target|e }}', '{{ auto_type|e }}', '{{ auto_mode|default('')|e }}');
+  }, 100);
+})();
+{% endif %}
+
+// ── Recent searches fill ────────────────────────────────────────────────────
+function runSavedSearch(target, scanType, mode) {
+  if (scanType === 'holehe') {
+    switchTab('holehe', document.querySelector('.tab-btn[onclick*="holehe"]'));
+    document.getElementById('h-email').value = target;
+    hStartScan();
+  } else {
+    switchTab('us', document.querySelector('.tab-btn[onclick*="us"]'));
+    document.getElementById('us-target').value = target;
+    if (mode === 'email' || mode === 'username') {
+      setMode(mode);
+    }
+    usStartScan();
+  }
+}
 
 // ── Modal helpers ────────────────────────────────────────────────────────────
 function openModal(which)  { document.getElementById('modal-' + which).classList.add('open'); }
@@ -520,6 +702,60 @@ function hRenderTable() {
 document.getElementById('h-email') && document.getElementById('h-email').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') hStartScan();
 });
+
+// ── Save search functions ───────────────────────────────────────────────────
+function _renderSavedPanel(searches) {
+  const list = document.querySelector('.saved-list');
+  if (!list) return;
+  if (!searches || searches.length === 0) {
+    list.innerHTML = '<p class="empty-saved">No saved searches yet.<br>Run a scan and hit Save.</p>';
+    return;
+  }
+  list.innerHTML = searches.map(s => {
+    const label = s.scan_type === 'holehe' ? 'Holehe' : 'User Scanner';
+    const modeStr = s.mode ? ` · ${s.mode}` : '';
+    return `<div class="saved-item" onclick="runSavedSearch('${escHtml(s.target)}','${s.scan_type}','${s.mode}')">
+  <div class="saved-item-body">
+    <span class="saved-target">${escHtml(s.target)}</span>
+    <span class="saved-type-badge badge-${s.scan_type}">${label}${modeStr}</span>
+  </div>
+  <button type="button" class="saved-delete" onclick="event.stopPropagation();deleteSaved(${s.id})" title="Delete">&times;</button>
+</div>`;
+  }).join('');
+}
+
+function hSaveSearch() {
+  if (!_hEmail) return;
+  fetch('/save', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'target=' + encodeURIComponent(_hEmail) + '&scan_type=holehe&mode='
+  })
+    .then(r => r.json())
+    .then(data => { if (data.ok) _renderSavedPanel(data.searches); })
+    .catch(() => {});
+}
+
+function usSaveSearch() {
+  const target = document.getElementById('us-target').value.trim();
+  if (!target) return;
+  fetch('/save', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'target=' + encodeURIComponent(target) + '&scan_type=us&mode=' + _usMode
+  })
+    .then(r => r.json())
+    .then(data => { if (data.ok) _renderSavedPanel(data.searches); })
+    .catch(() => {});
+}
+
+// ── Delete saved search ───────────────────────────────────────────────────────
+function deleteSaved(searchId) {
+  fetch('/saved/delete/' + searchId, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => { if (data.ok) _renderSavedPanel(data.searches); })
+    .catch(() => {});
+}
 
 // ── User Scanner ─────────────────────────────────────────────────────────────
 let _usMode   = 'email';
@@ -734,6 +970,7 @@ function hSubmitDownload() {
 document.getElementById('us-target') && document.getElementById('us-target').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') usStartScan();
 });
+
 </script>
 </body>
 </html>
