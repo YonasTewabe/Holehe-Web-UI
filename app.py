@@ -5,7 +5,7 @@ import os
 import re
 import subprocess
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 from email_validator import EmailNotValidError, validate_email
@@ -41,6 +41,12 @@ app = Flask(__name__)
 # ─────────────────────────────────────────────────────────────────────────────
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
+# Session lifetime — default 8 hours, override with SESSION_HOURS env var
+_session_hours = int(os.getenv('SESSION_HOURS', 8))
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=_session_hours)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 # Convert postgresql:// to postgresql+psycopg:// for psycopg3
 db_url = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost/osint_suite')
 if db_url.startswith('postgresql://'):
@@ -52,6 +58,23 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+@app.before_request
+def enforce_session_lifetime():
+    """Force logout if the absolute session expiry has been reached."""
+    if current_user.is_authenticated:
+        login_time = session.get('_login_time')
+        if login_time is None:
+            # Session predates this feature — expire it immediately
+            logout_user()
+            session.clear()
+            return redirect(url_for('login'))
+        expires_at = datetime.fromisoformat(login_time) + app.config['PERMANENT_SESSION_LIFETIME']
+        if datetime.now(timezone.utc) >= expires_at:
+            logout_user()
+            session.clear()
+            flash('Your session has expired. Please log in again.', 'warning')
+            return redirect(url_for('login'))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Database Models
@@ -126,6 +149,8 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             login_user(user)
+            session.permanent = True
+            session['_login_time'] = datetime.now(timezone.utc).isoformat()
             return redirect(url_for('index'))
         else:
             flash('Invalid email or password.', 'error')
@@ -441,10 +466,6 @@ def holehe_scan():
 
         yield "data: " + json.dumps({"type": "done", "email": normalized, "only_used": only_used}) + "\n\n"
 
-        # Save to history (auto-save option can be enabled via UI later)
-        found_count = sum(1 for r in rows if r.get("status") == "+")
-        save_search_db(normalized, "holehe", None)
-
     return Response(
         generate(),
         mimetype="text/event-stream",
@@ -561,9 +582,6 @@ def us_scan():
             loop.close()
 
         yield "data: " + json.dumps({"type": "done"}) + "\n\n"
-
-        # Save to history
-        save_search_db(target, "us", mode)
 
     return Response(
         generate(),

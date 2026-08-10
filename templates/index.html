@@ -7,537 +7,932 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
-      min-height: 100vh;
+    :root {
+      --bg:         #0a0c12;
+      --bg-panel:   #0f1119;
+      --bg-card:    #161a27;
+      --bg-input:   #0a0c12;
+      --border:     #252d42;
+      --border-hi:  #2e3a56;
+      --accent:     #4f80ff;
+      --accent-hi:  #6b97ff;
+      --accent-dim: #1a2d5a;
+      --green:      #4ade80;
+      --green-dim:  #14532d;
+      --red:        #f87171;
+      --red-dim:    #450a0a;
+      --orange:     #fb923c;
+      --text-hi:    #f1f5f9;
+      --text:       #cbd5e1;
+      --text-muted: #64748b;
+      --text-dim:   #3d4d6a;
+      --radius:     8px;
+      --radius-lg:  12px;
     }
 
-    /* ── Two-panel page layout ── */
-    body { padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-panel); }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+
+    /* ── Layout ── */
     .page-layout {
       display: flex;
       min-height: 100vh;
-      max-width: 1400px;
-      margin: 0 auto;
     }
 
-    /* Left panel — Saved */
-    .saved-panel {
-      width: 280px;
-      flex-shrink: 0;
-      background: #13161f;
-      border-right: 1px solid #2d3348;
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       position: sticky;
       top: 0;
       height: 100vh;
-      overflow-y: auto;
+      overflow: hidden;
     }
-    .saved-panel-header {
-      padding: 28px 20px 16px;
-      border-bottom: 1px solid #2d3348;
-    }
-    .saved-panel-header h2 {
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #64748b;
-      margin: 0;
-    }
-    .saved-list { padding: 12px 12px; flex: 1; }
-    .saved-item {
-      display: flex; align-items: center;
-      padding: 9px 10px; border-radius: 7px; margin-bottom: 4px;
-      background: transparent; border: 1px solid transparent;
-      cursor: pointer; transition: background 0.12s, border-color 0.12s;
-      gap: 8px;
-    }
-    .saved-item:hover { background: #1e2330; border-color: #2d3348; }
-    .saved-item-body {
-      flex: 1; min-width: 0;
-    }
-    .saved-target {
-      font-family: monospace; font-size: 0.8rem; color: #e2e8f0;
-      display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .saved-item:hover .saved-target { color: #7aa2f7; }
-    .saved-type-badge {
-      display: inline-block;
-      margin-top: 3px;
-      font-size: 0.62rem; font-weight: 600;
-      padding: 1px 5px; border-radius: 3px;
-    }
-    .badge-holehe { background: #1e3a5f; color: #7aa2f7; }
-    .badge-us     { background: #1a2f1e; color: #4ade80; }
-    .saved-delete {
-      background: none; border: none; color: #475569; cursor: pointer;
-      font-size: 1rem; padding: 2px 5px; border-radius: 4px;
-      flex-shrink: 0; opacity: 0; transition: opacity 0.1s, color 0.1s;
-    }
-    .saved-item:hover .saved-delete { opacity: 1; }
-    .saved-delete:hover { color: #fca5a5; background: #2d1515; }
-    .empty-saved {
-      color: #475569; font-size: 0.82rem; text-align: center;
-      padding: 24px 12px; line-height: 1.6;
-    }
-    .empty-saved a { color: #4f80ff; text-decoration: none; }
-    .empty-saved a:hover { text-decoration: underline; }
 
-    /* Right panel — Scanner */
-    .scanner-panel {
+    .sidebar-header {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .saved-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .empty-saved {
+      color: var(--text-muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 24px 12px;
+      line-height: 1.6;
+    }
+
+    .saved-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .saved-item:hover {
+      background: var(--bg-card);
+      border-color: var(--border);
+    }
+
+    .saved-item-body {
       flex: 1;
       min-width: 0;
-      padding: 40px 40px 60px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
     }
 
-    /* keep old .container for modals/forms that reference it */
-    .container { max-width: 100%; margin: 0; display: block; }
-    .main-content { width: 100%; }
-
-    .tag { padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; }
-    .tag-holehe { background: #1e3a5f; color: #7aa2f7; }
-    .tag-us { background: #1a2f1e; color: #4ade80; }
-    .saved-target-cell { cursor: pointer; font-family: monospace; }
-    .saved-target-cell:hover { color: #7aa2f7; }
-    .date-cell { color: #64748b; font-size: 0.85rem; }
-    .delete-btn {
-      background: transparent; border: none; color: #fb923c;
-      cursor: pointer; font-size: 0.85rem;
-      padding: 6px 12px; border-radius: 6px; margin-left: 8px;
+    .saved-target {
+      font-size: 13px;
+      color: var(--text-hi);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .delete-btn:hover { background: #2d1515; }
+
+    .saved-type-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      width: fit-content;
+    }
+
+    .badge-holehe { background: var(--accent-dim); color: var(--accent-hi); }
+    .badge-us     { background: var(--green-dim);  color: var(--green); }
+
+    .saved-delete {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .saved-delete:hover { color: var(--red); background: var(--red-dim); }
+
+    /* ── Main panel ── */
+    .main-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
 
     /* ── Header ── */
-    header { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-start; }
-    header h1 { font-size: 1.6rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.02em; }
-    header p  { margin-top: 6px; color: #94a3b8; font-size: 0.95rem; }
-    .nav { display: flex; gap: 12px; align-items: center; }
-    .nav a { color: #64748b; text-decoration: none; font-size: 0.9rem; }
-    .nav a:hover { color: #4f80ff; }
+    .app-header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-icon {
+      color: var(--accent);
+      opacity: 0.9;
+    }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-hi);
+      letter-spacing: -0.02em;
+    }
+
+    .header-title span {
+      color: var(--accent);
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 5px 12px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .nav-link:hover { color: var(--text-hi); border-color: var(--border); }
+
+    .nav-link.nav-logout {
+      color: var(--red);
+      border-color: var(--border);
+    }
+
+    .nav-link.nav-logout:hover {
+      background: var(--red-dim);
+      border-color: var(--red);
+    }
+
+    .nav-user {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 0 8px;
+    }
+
+    /* ── Content ── */
+    .main-content {
+      flex: 1;
+      padding: 28px 32px;
+      max-width: 920px;
+      width: 100%;
+      margin: 0 auto;
+    }
 
     /* ── Tabs ── */
-    .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid #2d3348; }
-    .tab-btn {
-      padding: 10px 22px; font-size: 0.9rem; font-weight: 600;
-      background: transparent; border: none; border-bottom: 2px solid transparent;
-      color: #64748b; cursor: pointer; transition: color 0.15s, border-color 0.15s;
-      margin-bottom: -1px;
+    .tabs-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
     }
-    .tab-btn:hover { color: #e2e8f0; }
-    .tab-btn.active { color: #7aa2f7; border-bottom-color: #4f80ff; }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 20px;
+      margin-bottom: -1px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* ── Card ── */
+    /* ── Cards ── */
     .card {
-      background: #1e2330; border: 1px solid #2d3348;
-      border-radius: 10px; padding: 20px; margin-bottom: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      box-shadow: 0 0 0 1px var(--border);
     }
 
     /* ── Inputs ── */
-    .search-row { display: flex; gap: 10px; align-items: center; }
-    input[type="email"], input[type="text"] {
-      flex: 1; padding: 10px 14px; font-size: 0.95rem;
-      background: #0f1117; border: 1px solid #2d3348; border-radius: 6px;
-      color: #e2e8f0; outline: none; transition: border-color 0.15s;
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
     }
-    input::placeholder { color: #4b5563; }
-    input:focus { border-color: #4f80ff; }
 
-    /* ── Select ── */
-    select {
-      padding: 10px 14px; font-size: 0.88rem;
-      background: #0f1117; border: 1px solid #2d3348; border-radius: 6px;
-      color: #e2e8f0; outline: none; cursor: pointer;
+    .input-field {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-hi);
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
     }
-    select:focus { border-color: #4f80ff; }
+
+    .input-field::placeholder { color: var(--text-dim); }
+    .input-field:focus { border-color: var(--accent); }
 
     /* ── Buttons ── */
     .btn {
-      padding: 10px 20px; font-size: 0.9rem; font-weight: 600;
-      border-radius: 6px; border: none; cursor: pointer;
-      transition: opacity 0.15s, background 0.15s; white-space: nowrap;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: opacity 0.15s, background 0.15s, transform 0.1s;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-primary  { background: #4f80ff; color: #fff; }
-    .btn-primary:hover:not(:disabled) { background: #3b6ef0; }
-    .btn-outline  { background: transparent; border: 1px solid #2d3348; color: #94a3b8; }
-    .btn-outline:hover:not(:disabled) { border-color: #4f80ff; color: #4f80ff; }
-    .btn-danger   { background: #7f1d1d; color: #fca5a5; border: none; }
-    .btn-danger:hover:not(:disabled) { background: #991b1b; }
 
-    /* ── Options row ── */
-    .options-row {
-      display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
-      margin-top: 12px;
-    }
-    .checkbox-row {
-      display: flex; align-items: center; gap: 8px;
-      color: #94a3b8; font-size: 0.88rem;
-    }
-    input[type="checkbox"] { accent-color: #4f80ff; width: 14px; height: 14px; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    /* ── Segmented mode picker ── */
-    .mode-row { display: flex; gap: 6px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hi); }
+
+    .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid #7f1d1d; }
+    .btn-danger:hover:not(:disabled) { background: #5c1a1a; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-outline:hover { border-color: var(--border-hi); color: var(--text); }
+
+    .btn-sm { font-size: 12px; padding: 6px 12px; }
+
+    /* ── Mode switcher ── */
+    .mode-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
     .mode-btn {
-      padding: 7px 16px; font-size: 0.85rem; font-weight: 500;
-      border-radius: 6px; border: 1px solid #2d3348;
-      background: transparent; color: #64748b; cursor: pointer;
-      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
-    .mode-btn:hover { border-color: #4f80ff; color: #7aa2f7; }
-    .mode-btn.active { background: #4f80ff22; border-color: #4f80ff; color: #7aa2f7; }
 
-    /* ── Error / Meta ── */
-    .error-msg {
-      background: #2d1515; border: 1px solid #7f1d1d; color: #fca5a5;
-      border-radius: 6px; padding: 10px 14px; font-size: 0.9rem; margin-top: 16px;
+    .mode-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent-hi);
     }
-    .meta { color: #64748b; font-size: 0.82rem; margin: 12px 0 4px; }
-    .meta strong { color: #94a3b8; }
 
-    /* ── Action bar ── */
-    .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    /* ── Checkbox row ── */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
 
-    /* ── Results table (holehe) ── */
-    .results-card {
-      background: #1e2330; border: 1px solid #2d3348;
-      border-radius: 10px; overflow: hidden; margin-top: 20px;
+    .check-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    thead tr { background: #161b27; }
-    th { padding: 10px 14px; text-align: left; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-    td { padding: 8px 14px; border-top: 1px solid #232838; color: #cbd5e1; }
-    tr:hover td { background: #232838; }
 
-    .tag-found    { color: #4ade80; }
-    .tag-notfound { color: #475569; }
-    .tag-error    { color: #fb923c; }
+    .check-row label {
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
 
-    .empty-results { padding: 32px; text-align: center; color: #475569; font-size: 0.9rem; }
+    /* ── Error banner ── */
+    .error-banner {
+      display: none;
+      background: var(--red-dim);
+      border: 1px solid #7f1d1d;
+      border-radius: var(--radius);
+      color: var(--red);
+      font-size: 13px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+    }
 
-    /* ── User-Scanner scanning indicator ── */
-    .progress-bar-wrap {
-      background: #161b27; border-radius: 6px; overflow: hidden;
-      height: 6px; margin: 12px 0;
+    /* ── Scanning card ── */
+    .scanning-card {
+      display: none;
+      margin-bottom: 20px;
     }
-    .progress-bar-fill {
-      height: 100%; background: #4f80ff;
-      transition: width 0.2s ease; width: 0%;
-    }
-    .progress-label { font-size: 0.8rem; color: #64748b; margin-bottom: 6px; }
 
-    .us-scanning-card {
-      background: #1e2330; border: 1px solid #2d3348;
-      border-radius: 10px; padding: 20px; margin-top: 16px;
+    .scanning-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
     }
-    .us-stats {
-      display: flex; gap: 20px; flex-wrap: wrap;
-      margin: 4px 0 0; font-size: 0.88rem;
-    }
-    .us-stat { color: #64748b; }
-    .us-stat span { font-weight: 700; }
-    .us-stat.found   span { color: #4ade80; }
-    .us-stat.skipped span { color: #94a3b8; }
-    .us-stat.error   span { color: #fb923c; }
-    .us-stat.total   span { color: #7aa2f7; }
 
-    /* ── User-Scanner results table (mirrors holehe) ── */
-    .us-results-card {
-      background: #1e2330; border: 1px solid #2d3348;
-      border-radius: 10px; overflow: hidden; margin-top: 20px;
+    .scanning-target {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-hi);
+      margin-bottom: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .us-results-card table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    .us-results-card thead tr { background: #161b27; }
-    .us-results-card th { padding: 10px 14px; text-align: left; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-    .us-results-card td { padding: 8px 14px; border-top: 1px solid #232838; vertical-align: top; }
-    .us-results-card tr:hover td { background: #232838; }
-    .us-results-card td a { color: #4ade80; text-decoration: underline; text-underline-offset: 2px; }
-    .us-results-card td a:hover { color: #86efac; }
 
-    /* ── Download modal ── */
-    .modal-backdrop {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.6); z-index: 100;
-      align-items: center; justify-content: center;
+    /* ── Progress bar ── */
+    .progress-track {
+      background: var(--bg-panel);
+      border-radius: 4px;
+      height: 5px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
     }
-    .modal-backdrop.open { display: flex; }
-    .modal {
-      background: #1e2330; border: 1px solid #2d3348; border-radius: 12px;
-      padding: 28px 24px; width: 100%; max-width: 380px; position: relative;
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--accent);
+      transition: width 0.3s ease;
     }
-    .modal h3 { font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 20px; }
-    .modal-close {
-      position: absolute; top: 14px; right: 16px;
-      background: none; border: none; color: #64748b; font-size: 1.2rem; cursor: pointer;
+
+    /* Holehe indeterminate pulse */
+    .progress-fill-pulse {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent-dim) 0%, var(--accent) 50%, var(--accent-dim) 100%);
+      background-size: 200% 100%;
+      animation: hpulse 1.4s ease-in-out infinite;
+      width: 100%;
     }
-    .modal-close:hover { color: #e2e8f0; }
-    .modal-group { margin-bottom: 18px; }
-    .modal-group label.group-label {
-      display: block; font-size: 0.78rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; margin-bottom: 8px;
-    }
-    .radio-row { display: flex; gap: 8px; }
-    .radio-btn {
-      flex: 1; padding: 8px 12px; font-size: 0.88rem; font-weight: 500;
-      border-radius: 6px; border: 1px solid #2d3348; background: transparent; color: #94a3b8;
-      cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s; text-align: center;
-    }
-    .radio-btn:hover { border-color: #4f80ff; color: #4f80ff; }
-    .radio-btn.selected { background: #4f80ff22; border-color: #4f80ff; color: #7aa2f7; }
-    .modal-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px; }
 
     @keyframes hpulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.35; }
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
-</style>
+
+    .progress-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: -10px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Stat counters ── */
+    .counters-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .counter-chip {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 60px;
+    }
+
+    .counter-value {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .counter-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .counter-found  .counter-value { color: var(--green); }
+    .counter-scanned .counter-value { color: var(--accent); }
+    .counter-error  .counter-value { color: var(--orange); }
+    .counter-skip   .counter-value { color: var(--text-muted); }
+
+    /* ── Results area ── */
+    .results-area { display: none; }
+
+    .results-summary {
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    .results-summary strong { color: var(--text-hi); }
+
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Results table ── */
+    .results-card {
+      overflow-x: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+
+    .results-card table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .results-card thead tr {
+      background: var(--bg-panel);
+    }
+
+    .results-card th {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .results-card td {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .results-card tbody tr:last-child td { border-bottom: none; }
+
+    .results-card tbody tr:hover td { background: var(--bg-panel); }
+
+    .results-card a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .results-card a:hover { text-decoration: underline; }
+
+    .tag-found    { color: var(--green); }
+    .tag-notfound { color: var(--text-muted); }
+    .tag-error    { color: var(--orange); }
+
+    .empty-results {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 24px 0 !important;
+    }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 380px;
+      max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-hi);
+      margin-bottom: 20px;
+    }
+
+    .modal-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .toggle-btn.selected {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent-hi);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main-content { padding: 18px 16px; }
+      .app-header { padding: 0 16px; }
+    }
+  </style>
 </head>
 <body>
+
 <div class="page-layout">
 
-  <!-- ══════════════════════════════════════════════════════
-       Left panel — Saved Searches
-  ══════════════════════════════════════════════════════ -->
-  <aside class="saved-panel">
-    <div class="saved-panel-header">
-      <h2>Saved Searches</h2>
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Saved Searches</div>
     </div>
     <div class="saved-list">
       {% if current_user.is_authenticated %}
         {% if saved_searches %}
           {% for search in saved_searches %}
-          <div class="saved-item" onclick="runSavedSearch('{{ search.target|e }}', '{{ search.scan_type|e }}', '{{ search.mode|default('')|e }}')">
-            <div class="saved-item-body">
-              <span class="saved-target">{{ search.target }}</span>
-              <span class="saved-type-badge badge-{{ search.scan_type }}">
-                {% if search.scan_type == 'holehe' %}Holehe{% else %}User Scanner{% endif %}
-                {% if search.mode %}· {{ search.mode }}{% endif %}
-              </span>
+            {% set label = 'Holehe' if search.scan_type == 'holehe' else 'User Scanner' %}
+            {% set mode_str = ' · ' ~ search.mode if search.mode else '' %}
+            <div class="saved-item" onclick="runSavedSearch('{{ search.target|e }}','{{ search.scan_type|e }}','{{ search.mode|default('')|e }}')">
+              <div class="saved-item-body">
+                <span class="saved-target">{{ search.target }}</span>
+                <span class="saved-type-badge badge-{{ search.scan_type }}">{{ label }}{{ mode_str }}</span>
+              </div>
+              <button type="button" class="saved-delete" onclick="event.stopPropagation();deleteSaved({{ search.id }})" title="Delete">&times;</button>
             </div>
-            <button type="button" class="saved-delete" onclick="event.stopPropagation(); deleteSaved({{ search.id }})" title="Delete">&times;</button>
-          </div>
           {% endfor %}
         {% else %}
           <p class="empty-saved">No saved searches yet.<br>Run a scan and hit Save.</p>
         {% endif %}
       {% else %}
-        <p class="empty-saved"><a href="{{ url_for('login') }}">Log in</a> to save searches.</p>
+        <p class="empty-saved"><a href="{{ url_for('login') }}" style="color:var(--accent)">Sign in</a> to save searches.</p>
       {% endif %}
     </div>
   </aside>
 
-  <!-- ══════════════════════════════════════════════════════
-       Right panel — Scanner
-  ══════════════════════════════════════════════════════ -->
-  <main class="scanner-panel">
-  <div class="container">
-  <div class="main-content">
-  <header>
-    <div>
-      <h1>OSINT Suite</h1>
-      <p>Email &amp; username intelligence — powered by Holehe and User Scanner.</p>
-    </div>
-    <div class="nav">
-      {% if current_user.is_authenticated %}
-        <span style="color:#64748b;font-size:0.9rem;">{{ current_user.email }}</span>
-        <a href="{{ url_for('logout') }}">Logout</a>
-      {% else %}
-        <a href="{{ url_for('login') }}">Login</a>
-        <a href="{{ url_for('register') }}">Register</a>
-      {% endif %}
-    </div>
-  </header>
+  <!-- ── Main panel ── -->
+  <div class="main-panel">
 
-  <!-- ── Tabs ── -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('holehe', this)">Holehe</button>
-    <button class="tab-btn" onclick="switchTab('us', this)">User Scanner</button>
-  </div>
-
-  <!-- ════════════════════════════════════════════════════════════════════════
-       Tab: Holehe
-  ════════════════════════════════════════════════════════════════════════ -->
-  <div id="tab-holehe" class="tab-panel active">
-    <div class="card">
-      <div class="search-row">
-        <input type="email" id="h-email" placeholder="email@example.com" autocomplete="off">
-        <button class="btn btn-primary" id="h-scan-btn" onclick="hStartScan()">Search</button>
-        <button class="btn btn-danger"  id="h-stop-btn" onclick="hStopScan()" style="display:none;">Stop</button>
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <svg class="header-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="6"/>
+          <circle cx="12" cy="12" r="2"/>
+          <line x1="12" y1="2" x2="12" y2="4"/>
+          <line x1="12" y1="20" x2="12" y2="22"/>
+          <line x1="2" y1="12" x2="4" y2="12"/>
+          <line x1="20" y1="12" x2="22" y2="12"/>
+        </svg>
+        <span class="header-title">OSINT<span> Suite</span></span>
       </div>
-    </div>
-
-    <div id="h-error" class="error-msg" style="display:none;"></div>
-
-    <!-- Scanning indicator -->
-    <div id="h-scanning-card" class="us-scanning-card" style="display:none;">
-      <div class="meta">Searching <strong id="h-target-display"></strong>…</div>
-      <div class="progress-bar-wrap" style="margin-top:10px;">
-        <div class="progress-bar-fill" id="h-progress-bar" style="width:100%;animation:hpulse 1.2s ease-in-out infinite;"></div>
-      </div>
-      <div class="us-stats" style="margin-top:10px;">
-        <div class="us-stat found">  Found: <span id="h-count-found">0</span></div>
-        <div class="us-stat total">  Scanned: <span id="h-count-total">0</span></div>
-        <div class="us-stat error">  Rate Limited / Error: <span id="h-count-error">0</span></div>
-      </div>
-    </div>
-
-    <!-- Final report -->
-    <div id="h-results-area" style="display:none;">
-      <p class="meta"><span id="h-summary-text"></span></p>
-      <div class="action-bar">
-        <button type="button" class="btn btn-outline" onclick="openModal('holehe')">Download Report</button>
+      <nav class="header-nav">
         {% if current_user.is_authenticated %}
-        <button type="button" class="btn btn-outline" onclick="hSaveSearch()">Save</button>
+          <span class="nav-user">{{ current_user.email }}</span>
+          <a href="{{ url_for('logout') }}" class="nav-link nav-logout">Log out</a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+          <a href="{{ url_for('register') }}" class="nav-link">Register</a>
         {% endif %}
-        <label class="checkbox-row">
-          <input type="checkbox" id="h-only-used" onchange="hRenderTable()"> Show found only
-        </label>
-      </div>
-      <div class="results-card" id="h-results-card">
-        <!-- table injected by JS -->
-      </div>
-    </div>
-  </div><!-- /tab-holehe -->
+      </nav>
+    </header>
 
-  <!-- ════════════════════════════════════════════════════════════════════════
-       Tab: User Scanner
-  ════════════════════════════════════════════════════════════════════════ -->
-  <div id="tab-us" class="tab-panel">
-    <div class="card">
-      <div class="search-row">
-        <input type="text" id="us-target" placeholder="email@example.com" autocomplete="off">
-        <button class="btn btn-primary" id="us-scan-btn" onclick="usStartScan()">Search</button>
-        <button class="btn btn-danger"  id="us-stop-btn" onclick="usStopScan()" style="display:none;">Stop</button>
+    <!-- Content -->
+    <main class="main-content">
+
+      <!-- Tabs bar -->
+      <div class="tabs-bar">
+        <button class="tab-btn active" onclick="switchTab('holehe', this)">Holehe</button>
+        <button class="tab-btn" onclick="switchTab('us', this)">User Scanner</button>
       </div>
-      <div class="options-row">
-        <div class="mode-row">
-          <button class="mode-btn active" id="mode-email"    onclick="setMode('email')">Email</button>
-          <button class="mode-btn"        id="mode-username" onclick="setMode('username')">Username</button>
+
+      <!-- ── HOLEHE TAB ── -->
+      <div id="tab-holehe" class="tab-panel active">
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="input-row">
+            <input id="h-email" type="email" class="input-field" placeholder="email@example.com" autocomplete="off">
+            <button id="h-scan-btn" class="btn btn-primary" onclick="hStartScan()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Search
+            </button>
+            <button id="h-stop-btn" class="btn btn-danger" onclick="hStopScan()" style="display:none">Stop</button>
+          </div>
         </div>
-        <label class="checkbox-row">
-          <input type="checkbox" id="us-allow-loud"> Include notifying modules
-        </label>
-      </div>
-    </div>
 
-    <div id="us-error" class="error-msg" style="display:none;"></div>
+        <!-- Error -->
+        <div id="h-error" class="error-banner"></div>
 
-    <!-- Scanning progress (visible while scan is running) -->
-    <div id="us-scanning-card" class="us-scanning-card" style="display:none;">
-      <div class="meta">
-        Scanning <strong id="us-target-display"></strong>…
-      </div>
-      <p class="progress-label" id="us-progress-label" style="margin-top:10px;">0 / 0</p>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" id="us-progress-bar"></div>
-      </div>
-      <div class="us-stats">
-        <div class="us-stat found">   Found: <span id="us-count-found">0</span></div>
-        <div class="us-stat total">   Scanned: <span id="us-count-total">0</span></div>
-        <div class="us-stat error">   Errors: <span id="us-count-error">0</span></div>
-        <div class="us-stat skipped"> Skipped: <span id="us-count-skipped">0</span></div>
-      </div>
-    </div>
-
-    <!-- Final report (visible after scan completes) -->
-    <div id="us-results-area" style="display:none;">
-      <p class="meta">
-        <span id="us-summary-text"></span>
-      </p>
-      <div class="action-bar">
-        <button type="button" class="btn btn-outline" onclick="openModal('us')">Download Report</button>
-        {% if current_user.is_authenticated %}
-        <button type="button" class="btn btn-outline" onclick="usSaveSearch()">Save</button>
-        {% endif %}
-        <label class="checkbox-row">
-          <input type="checkbox" id="us-found-only" onchange="usRenderTable()"> Show found only
-        </label>
-      </div>
-      <div class="us-results-card" id="us-results-card">
-        <!-- table injected by JS -->
-      </div>
-    </div>
-  </div><!-- /tab-us -->
-
-  <!-- ── Holehe download modal ── -->
-  <div class="modal-backdrop" id="modal-holehe" role="dialog" aria-modal="true">
-    <div class="modal">
-      <button class="modal-close" onclick="closeModal('holehe')" aria-label="Close">&times;</button>
-      <h3>Download Holehe Report</h3>
-      <div class="modal-group">
-        <label class="group-label">Content</label>
-        <div class="radio-row">
-          <button type="button" class="radio-btn selected" id="h-scopeFull"  onclick="hSelectScope('full')">Full report</button>
-          <button type="button" class="radio-btn"          id="h-scopeFound" onclick="hSelectScope('found')">Found only</button>
+        <!-- Scanning card -->
+        <div id="h-scanning-card" class="card scanning-card">
+          <div class="scanning-label">Scanning</div>
+          <div id="h-target-display" class="scanning-target"></div>
+          <div class="progress-track">
+            <div id="h-progress-bar" class="progress-fill-pulse"></div>
+          </div>
+          <div class="counters-row">
+            <div class="counter-chip counter-found">
+              <span id="h-count-found" class="counter-value">0</span>
+              <span class="counter-label">Found</span>
+            </div>
+            <div class="counter-chip counter-scanned">
+              <span id="h-count-total" class="counter-value">0</span>
+              <span class="counter-label">Scanned</span>
+            </div>
+            <div class="counter-chip counter-error">
+              <span id="h-count-error" class="counter-value">0</span>
+              <span class="counter-label">Errors</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="modal-group">
-        <label class="group-label">Format</label>
-        <div class="radio-row">
-          <button type="button" class="radio-btn selected" id="h-fmtJson" onclick="hSelectFmt('json')">JSON</button>
-          <button type="button" class="radio-btn"          id="h-fmtTxt"  onclick="hSelectFmt('txt')">TXT</button>
+
+        <!-- Results area -->
+        <div id="h-results-area" class="results-area">
+          <p id="h-summary-text" class="results-summary"></p>
+          <div class="action-bar">
+            <button class="btn btn-outline btn-sm" onclick="openModal('holehe')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Report
+            </button>
+            {% if current_user.is_authenticated %}
+            <button class="btn btn-outline btn-sm" onclick="hSaveSearch()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save
+            </button>
+            {% endif %}
+            <div class="check-row" style="margin-top:0">
+              <input type="checkbox" id="h-only-used" onchange="hRenderTable()">
+              <label for="h-only-used">Show found only</label>
+            </div>
+          </div>
+          <div id="h-results-card" class="results-card"></div>
         </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-outline" onclick="closeModal('holehe')">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="hSubmitDownload()">Download</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- ── User Scanner download modal ── -->
-  <div class="modal-backdrop" id="modal-us" role="dialog" aria-modal="true">
-    <div class="modal">
-      <button class="modal-close" onclick="closeModal('us')" aria-label="Close">&times;</button>
-      <h3>Download User Scanner Report</h3>
-      <div class="modal-group">
-        <label class="group-label">Content</label>
-        <div class="radio-row">
-          <button type="button" class="radio-btn selected" id="us-scopeFull"  onclick="usSelectScope('full')">Full report</button>
-          <button type="button" class="radio-btn"          id="us-scopeFound" onclick="usSelectScope('found')">Found only</button>
+      </div><!-- /tab-holehe -->
+
+      <!-- ── USER SCANNER TAB ── -->
+      <div id="tab-us" class="tab-panel">
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="input-row">
+            <input id="us-target" type="text" class="input-field" placeholder="email@example.com" autocomplete="off">
+            <button id="us-scan-btn" class="btn btn-primary" onclick="usStartScan()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Search
+            </button>
+            <button id="us-stop-btn" class="btn btn-danger" onclick="usStopScan()" style="display:none">Stop</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:10px;">
+            <button id="mode-email" class="mode-btn active" onclick="setMode('email')">Email</button>
+            <button id="mode-username" class="mode-btn" onclick="setMode('username')">Username</button>
+            <div class="check-row" style="margin-top:0">
+              <input type="checkbox" id="us-allow-loud">
+              <label for="us-allow-loud">Include notifying modules</label>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="modal-group">
-        <label class="group-label">Format</label>
-        <div class="radio-row">
-          <button type="button" class="radio-btn selected" id="us-fmtJson" onclick="usSelectFmt('json')">JSON</button>
-          <button type="button" class="radio-btn"          id="us-fmtCsv"  onclick="usSelectFmt('csv')">CSV</button>
-          <button type="button" class="radio-btn"          id="us-fmtTxt"  onclick="usSelectFmt('txt')">TXT</button>
+
+        <!-- Error -->
+        <div id="us-error" class="error-banner"></div>
+
+        <!-- Scanning card -->
+        <div id="us-scanning-card" class="card scanning-card">
+          <div class="scanning-label">Scanning</div>
+          <div id="us-target-display" class="scanning-target"></div>
+          <div class="progress-track">
+            <div id="us-progress-bar" class="progress-fill" style="width:0%"></div>
+          </div>
+          <div id="us-progress-label" class="progress-label"></div>
+          <div class="counters-row">
+            <div class="counter-chip counter-found">
+              <span id="us-count-found" class="counter-value">0</span>
+              <span class="counter-label">Found</span>
+            </div>
+            <div class="counter-chip counter-scanned">
+              <span id="us-count-total" class="counter-value">0</span>
+              <span class="counter-label">Scanned</span>
+            </div>
+            <div class="counter-chip counter-error">
+              <span id="us-count-error" class="counter-value">0</span>
+              <span class="counter-label">Errors</span>
+            </div>
+            <div class="counter-chip counter-skip">
+              <span id="us-count-skipped" class="counter-value">0</span>
+              <span class="counter-label">Skipped</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-outline" onclick="closeModal('us')">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="usSubmitDownload()">Download</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Hidden Holehe download form -->
-  <form id="h-downloadForm" method="POST" style="display:none;">
-    <input type="hidden" name="email" id="h-dl-email" value="">
-    <input type="hidden" name="data"  id="h-dl-data"  value="[]">
-    <input type="hidden" name="scope" id="h-downloadScope" value="full">
-  </form>
+        <!-- Results area -->
+        <div id="us-results-area" class="results-area">
+          <p id="us-summary-text" class="results-summary"></p>
+          <div class="action-bar">
+            <button class="btn btn-outline btn-sm" onclick="openModal('us')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Report
+            </button>
+            {% if current_user.is_authenticated %}
+            <button class="btn btn-outline btn-sm" onclick="usSaveSearch()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save
+            </button>
+            {% endif %}
+            <div class="check-row" style="margin-top:0">
+              <input type="checkbox" id="us-found-only" onchange="usRenderTable()">
+              <label for="us-found-only">Show found only</label>
+            </div>
+          </div>
+          <div id="us-results-card" class="results-card"></div>
+        </div>
 
-  <!-- Hidden User Scanner download form -->
-  <form id="us-downloadForm" method="POST" action="/us/download/json" style="display:none;">
-    <input type="hidden" name="target" id="us-dl-target" value="">
-    <input type="hidden" name="mode"   id="us-dl-mode"   value="email">
-    <input type="hidden" name="data"   id="us-dl-data"   value="[]">
-    <input type="hidden" name="scope"  id="us-dl-scope"  value="full">
-  </form>
+      </div><!-- /tab-us -->
 
-  </div><!-- /main-content -->
-  </div><!-- /container -->
-  </main><!-- /scanner-panel -->
-
+    </main>
+  </div><!-- /main-panel -->
 </div><!-- /page-layout -->
+
+<!-- ── DELETE CONFIRM MODAL ── -->
+<div id="modal-delete-confirm" class="modal-backdrop">
+  <div class="modal-box" style="max-width:320px">
+    <div class="modal-title" style="font-size:15px">Remove saved search?</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:22px;line-height:1.5">This will permanently remove the entry from your saved searches.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('delete-confirm')">Cancel</button>
+      <button class="btn btn-sm" id="confirm-delete-btn" style="background:var(--red-dim);color:var(--red);border:1px solid #7f1d1d">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HOLEHE DOWNLOAD MODAL ── -->
+<div id="modal-holehe" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-title">Download Holehe Report</div>
+
+    <div class="modal-section-label">Content Scope</div>
+    <div class="toggle-group">
+      <button id="h-scopeFull"  class="toggle-btn selected" onclick="hSelectScope('full')">Full report</button>
+      <button id="h-scopeFound" class="toggle-btn"          onclick="hSelectScope('found')">Found only</button>
+    </div>
+
+    <div class="modal-section-label">Format</div>
+    <div class="toggle-group">
+      <button id="h-fmtJson" class="toggle-btn selected" onclick="hSelectFmt('json')">JSON</button>
+      <button id="h-fmtTxt"  class="toggle-btn"          onclick="hSelectFmt('txt')">TXT</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('holehe')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="hSubmitDownload()">Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── USER SCANNER DOWNLOAD MODAL ── -->
+<div id="modal-us" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-title">Download User Scanner Report</div>
+
+    <div class="modal-section-label">Content Scope</div>
+    <div class="toggle-group">
+      <button id="us-scopeFull"  class="toggle-btn selected" onclick="usSelectScope('full')">Full report</button>
+      <button id="us-scopeFound" class="toggle-btn"          onclick="usSelectScope('found')">Found only</button>
+    </div>
+
+    <div class="modal-section-label">Format</div>
+    <div class="toggle-group">
+      <button id="us-fmtJson" class="toggle-btn selected" onclick="usSelectFmt('json')">JSON</button>
+      <button id="us-fmtCsv"  class="toggle-btn"          onclick="usSelectFmt('csv')">CSV</button>
+      <button id="us-fmtTxt"  class="toggle-btn"          onclick="usSelectFmt('txt')">TXT</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('us')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="usSubmitDownload()">Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HIDDEN DOWNLOAD FORMS ── -->
+<form id="h-downloadForm" method="POST" style="display:none">
+  <input type="hidden" id="h-dl-email" name="email">
+  <input type="hidden" id="h-dl-data"  name="data">
+  <input type="hidden" id="h-downloadScope" name="scope">
+</form>
+
+<form id="us-downloadForm" method="POST" style="display:none">
+  <input type="hidden" id="us-dl-target" name="target">
+  <input type="hidden" id="us-dl-mode"   name="mode">
+  <input type="hidden" id="us-dl-data"   name="data">
+  <input type="hidden" id="us-dl-scope"  name="scope">
+</form>
 
 <script>
 // ── Tab switching ────────────────────────────────────────────────────────────
@@ -576,10 +971,11 @@ function runSavedSearch(target, scanType, mode) {
     hStartScan();
   } else {
     switchTab('us', document.querySelector('.tab-btn[onclick*="us"]'));
-    document.getElementById('us-target').value = target;
     if (mode === 'email' || mode === 'username') {
       setMode(mode);
     }
+    // setMode() clears the input, so set the value after
+    document.getElementById('us-target').value = target;
     usStartScan();
   }
 }
@@ -594,9 +990,10 @@ document.querySelectorAll('.modal-backdrop').forEach(el => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(el => el.classList.remove('open'));
 });
-
+</script>
+<script>
 // ── Holehe ───────────────────────────────────────────────────────────────────
-let _hRows   = [];   // raw rows from holehe: [{status, site}, ...]
+let _hRows   = [];
 let _hEmail  = '';
 let _hEvt    = null;
 let _hCounts = { found: 0, total: 0, error: 0 };
@@ -605,7 +1002,6 @@ function hStartScan() {
   const email = document.getElementById('h-email').value.trim();
   if (!email) return;
 
-  // Reset
   if (_hEvt) { _hEvt.close(); _hEvt = null; }
   _hRows   = [];
   _hEmail  = email;
@@ -698,11 +1094,11 @@ function hRenderTable() {
   document.getElementById('h-results-area').style.display = 'block';
 }
 
-// Allow Enter key
 document.getElementById('h-email') && document.getElementById('h-email').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') hStartScan();
 });
-
+</script>
+<script>
 // ── Save search functions ───────────────────────────────────────────────────
 function _renderSavedPanel(searches) {
   const list = document.querySelector('.saved-list');
@@ -749,18 +1145,26 @@ function usSaveSearch() {
     .catch(() => {});
 }
 
-// ── Delete saved search ───────────────────────────────────────────────────────
-function deleteSaved(searchId) {
-  fetch('/saved/delete/' + searchId, { method: 'POST' })
-    .then(r => r.json())
-    .then(data => { if (data.ok) _renderSavedPanel(data.searches); })
-    .catch(() => {});
-}
+let _pendingDeleteId = null;
 
+function deleteSaved(searchId) {
+  _pendingDeleteId = searchId;
+  openModal('delete-confirm');
+  document.getElementById('confirm-delete-btn').onclick = function() {
+    closeModal('delete-confirm');
+    fetch('/saved/delete/' + _pendingDeleteId, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => { if (data.ok) _renderSavedPanel(data.searches); })
+      .catch(() => {});
+    _pendingDeleteId = null;
+  };
+}
+</script>
+<script>
 // ── User Scanner ─────────────────────────────────────────────────────────────
 let _usMode   = 'email';
-let _usRows   = [];       // all received result objects
-let _usEvt    = null;     // active EventSource
+let _usRows   = [];
+let _usEvt    = null;
 let _usCounts = { found: 0, total: 0, error: 0, skipped: 0 };
 
 function setMode(m) {
@@ -776,7 +1180,6 @@ function usStartScan() {
   const target = document.getElementById('us-target').value.trim();
   if (!target) return;
 
-  // Reset
   usStopScan();
   _usRows   = [];
   _usCounts = { found: 0, total: 0, error: 0, skipped: 0 };
@@ -857,8 +1260,8 @@ function usSetProgress(done, total) {
   document.getElementById('us-progress-bar').style.width       = pct + '%';
   document.getElementById('us-progress-label').textContent = total > 0 ? `${done} / ${total}` : '';
 }
-
-// Build the holehe-style 3-column table from collected results
+</script>
+<script>
 function usRenderTable() {
   const onlyFound  = document.getElementById('us-found-only').checked;
   const isEmail    = (_usMode === 'email');
@@ -874,8 +1277,6 @@ function usRenderTable() {
   document.getElementById('us-summary-text').innerHTML =
     `${_usRows.length} sites checked for <strong>${escHtml(target)}</strong> — <strong>${found.length}</strong> ${foundLabel.toLowerCase()}`;
 
-  // Links only on found username results — those URLs point directly to the profile.
-  // For email scans the URL is just the site homepage, not useful as a direct link.
   function siteCell(r, isFound) {
     if (!r) return '';
     const canLink = isFound && !isEmail && r.url;
@@ -966,11 +1367,9 @@ function hSubmitDownload() {
   closeModal('holehe');
 }
 
-// Allow Enter key for user scanner
 document.getElementById('us-target') && document.getElementById('us-target').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') usStartScan();
 });
-
 </script>
 </body>
 </html>
