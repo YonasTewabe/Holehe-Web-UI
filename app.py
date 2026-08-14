@@ -425,44 +425,65 @@ def holehe_scan():
         if only_used:
             cmd.append("--only-used")
 
+        tmpdir_obj = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        tmpdir = tmpdir_obj.name
+        proc = None
         try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                proc = subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    cwd=tmpdir,
-                )
-                rows = []
-                for raw_line in proc.stdout:
-                    line = raw_line.strip()
-                    if not line:
-                        continue
-                    if "Email used" in line and "Email not used" in line:
-                        continue
-                    match = LINE_RE.match(line)
-                    if not match:
-                        continue
-                    status, site = match.groups()
-                    site = site.strip()
-                    if "[" in site or "]" in site:
-                        continue
-                    row = {"status": status, "site": site}
-                    rows.append(row)
-                    yield "data: " + json.dumps({"type": "result", "row": row}) + "\n\n"
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                cwd=tmpdir,
+            )
+            rows = []
+            for raw_line in proc.stdout:
+                line = raw_line.strip()
+                if not line:
+                    continue
+                if "Email used" in line and "Email not used" in line:
+                    continue
+                match = LINE_RE.match(line)
+                if not match:
+                    continue
+                status, site = match.groups()
+                site = site.strip()
+                if "[" in site or "]" in site:
+                    continue
+                row = {"status": status, "site": site}
+                rows.append(row)
+                yield "data: " + json.dumps({"type": "result", "row": row}) + "\n\n"
 
+            try:
                 proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
 
-                if proc.returncode != 0 and not rows:
-                    stderr = proc.stderr.read().strip()
-                    yield "data: " + json.dumps({"type": "error", "message": stderr or "holehe returned no output."}) + "\n\n"
-                    return
+            if proc.returncode != 0 and not rows:
+                stderr = proc.stderr.read().strip()
+                yield "data: " + json.dumps({"type": "error", "message": stderr or "holehe returned no output."}) + "\n\n"
+                return
 
         except subprocess.TimeoutExpired:
-            proc.kill()
+            if proc:
+                proc.kill()
+                proc.wait()
             yield "data: " + json.dumps({"type": "error", "message": "Lookup timed out."}) + "\n\n"
             return
+        except GeneratorExit:
+            if proc and proc.poll() is None:
+                proc.kill()
+                proc.wait()
+            return
+        finally:
+            if proc:
+                if proc.stdout: proc.stdout.close()
+                if proc.stderr: proc.stderr.close()
+                if proc.poll() is None:
+                    proc.kill()
+                    proc.wait()
+            tmpdir_obj.cleanup()
 
         yield "data: " + json.dumps({"type": "done", "email": normalized, "only_used": only_used}) + "\n\n"
 
