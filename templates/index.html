@@ -335,6 +335,14 @@
 
     .btn-outline:hover { border-color: var(--border-hi); color: var(--text); }
 
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-ghost:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+
     .btn-sm { font-size: 12px; padding: 6px 12px; }
 
     /* ── Mode switcher ── */
@@ -725,6 +733,10 @@
               Search
             </button>
             <button id="h-stop-btn" class="btn btn-danger" onclick="hStopScan()" style="display:none">Stop</button>
+            <button id="h-clear-btn" class="btn btn-ghost" onclick="hClear()" title="Clear search and results">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Clear
+            </button>
           </div>
         </div>
 
@@ -789,6 +801,10 @@
               Search
             </button>
             <button id="us-stop-btn" class="btn btn-danger" onclick="usStopScan()" style="display:none">Stop</button>
+            <button id="us-clear-btn" class="btn btn-ghost" onclick="usClear()" title="Clear search and results">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Clear
+            </button>
           </div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:10px;">
             <button id="mode-email" class="mode-btn active" onclick="setMode('email')">Email</button>
@@ -1055,6 +1071,22 @@ function hStopScan(finished) {
   document.getElementById('h-stop-btn').style.display      = 'none';
   document.getElementById('h-scanning-card').style.display = 'none';
   if (finished && _hRows.length > 0) hRenderTable();
+  else setTimeout(() => document.getElementById('h-email').focus(), 0);
+}
+
+function hClear() {
+  if (_hEvt) { _hEvt.close(); _hEvt = null; }
+  _hRows   = [];
+  _hEmail  = '';
+  _hCounts = { found: 0, total: 0, error: 0 };
+  document.getElementById('h-email').value                 = '';
+  document.getElementById('h-scan-btn').disabled           = false;
+  document.getElementById('h-stop-btn').style.display      = 'none';
+  document.getElementById('h-scanning-card').style.display = 'none';
+  document.getElementById('h-results-area').style.display  = 'none';
+  document.getElementById('h-error').style.display         = 'none';
+  document.getElementById('h-results-card').innerHTML      = '';
+  document.getElementById('h-email').focus();
 }
 
 function hRenderTable() {
@@ -1224,14 +1256,30 @@ function usStartScan() {
 
 function usStopScan(finished) {
   if (_usEvt) { _usEvt.close(); _usEvt = null; }
-  document.getElementById('us-scan-btn').disabled      = false;
-  document.getElementById('us-stop-btn').style.display = 'none';
+  document.getElementById('us-scan-btn').disabled           = false;
+  document.getElementById('us-stop-btn').style.display      = 'none';
   document.getElementById('us-scanning-card').style.display = 'none';
 
   if (finished && _usRows.length > 0) {
     usRenderTable();
     document.getElementById('us-results-area').style.display = 'block';
+  } else {
+    setTimeout(() => document.getElementById('us-target').focus(), 0);
   }
+}
+
+function usClear() {
+  if (_usEvt) { _usEvt.close(); _usEvt = null; }
+  _usRows   = [];
+  _usCounts = { found: 0, total: 0, error: 0, skipped: 0 };
+  document.getElementById('us-target').value                = '';
+  document.getElementById('us-scan-btn').disabled           = false;
+  document.getElementById('us-stop-btn').style.display      = 'none';
+  document.getElementById('us-scanning-card').style.display = 'none';
+  document.getElementById('us-results-area').style.display  = 'none';
+  document.getElementById('us-error').style.display         = 'none';
+  document.getElementById('us-results-card').innerHTML      = '';
+  document.getElementById('us-target').focus();
 }
 
 function showUsError(msg) {
