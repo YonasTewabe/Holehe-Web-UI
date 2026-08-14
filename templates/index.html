@@ -543,6 +543,7 @@
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      text-align: left;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
     }
@@ -1319,7 +1320,8 @@ function usRenderTable() {
   const cmp = (a, b, key) => (a[key] || '').toLowerCase().localeCompare((b[key] || '').toLowerCase());
   const found    = _usRows.filter(r => r.status_code === 0).sort((a, b) => cmp(a, b, 'site_name'));
   const notfound = _usRows.filter(r => r.status_code === 1).sort((a, b) => cmp(a, b, 'site_name'));
-  const errored  = _usRows.filter(r => r.status_code !== 0 && r.status_code !== 1).sort((a, b) => cmp(a, b, 'site_name'));
+  const errored  = _usRows.filter(r => r.status_code === 2).sort((a, b) => cmp(a, b, 'site_name'));
+  const skipped  = _usRows.filter(r => r.status_code === 3).sort((a, b) => cmp(a, b, 'site_name'));
 
   const target = document.getElementById('us-target').value.trim();
   document.getElementById('us-summary-text').innerHTML =
@@ -1333,18 +1335,20 @@ function usRenderTable() {
       : escHtml(r.site_name);
   }
 
+  const cols = onlyFound ? 1 : 4;
+
   let html = '<table><thead><tr>';
   html += `<th class="tag-found">${escHtml(foundLabel)} (${found.length})</th>`;
   if (!onlyFound) {
     html += `<th class="tag-notfound">${escHtml(notLabel)} (${notfound.length})</th>`;
-    html += `<th class="tag-error">Errors / Skipped (${errored.length})</th>`;
+    html += `<th class="tag-error">Errors (${errored.length})</th>`;
+    html += `<th style="color:var(--text-muted)">Skipped (${skipped.length})</th>`;
   }
   html += '</tr></thead><tbody>';
 
-  const rows = onlyFound ? found.length : Math.max(found.length, notfound.length, errored.length);
+  const rows = onlyFound ? found.length : Math.max(found.length, notfound.length, errored.length, skipped.length);
 
   if (rows === 0) {
-    const cols = onlyFound ? 1 : 3;
     html += `<tr><td colspan="${cols}" class="empty-results">No results.</td></tr>`;
   } else {
     for (let i = 0; i < rows; i++) {
@@ -1353,6 +1357,7 @@ function usRenderTable() {
       if (!onlyFound) {
         html += `<td class="tag-notfound">${notfound[i] ? siteCell(notfound[i], false) : ''}</td>`;
         html += `<td class="tag-error">${errored[i]  ? siteCell(errored[i], false)  : ''}</td>`;
+        html += `<td style="color:var(--text-muted)">${skipped[i]  ? siteCell(skipped[i], false)  : ''}</td>`;
       }
       html += '</tr>';
     }
